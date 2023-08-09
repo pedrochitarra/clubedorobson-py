@@ -3,6 +3,8 @@ import src.components.club_info as components_club
 import streamlit as st
 
 
+st.set_page_config(page_title='Clube do Robson', page_icon="assets/l99150901.png")
+
 clubs = utils_club.get_all_clubs()
 # Get CdR, the row with clubId == 6703918
 cdr = clubs[clubs["clubId"] == 6703918]
