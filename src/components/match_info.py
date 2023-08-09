@@ -15,13 +15,13 @@ def update_edited_rows():
     edited_rows = [row[0] for row in edited_rows if row[1]]
     # st.write(edited_rows)
     # Keep only the highest value of edited_rows list
-    keep_row = max(edited_rows)
-    st.session_state["keep_row"] = keep_row
+    selected_match = max(edited_rows) if len(edited_rows) > 0 else None
+    st.session_state["selected_match"] = selected_match
 
 
 def component_season_matches(matches_df):
-    if "keep_row" not in st.session_state:
-        st.session_state["keep_row"] = None
+    if "selected_match" not in st.session_state:
+        st.session_state["selected_match"] = None
     st.data_editor(
         matches_df,
         column_config={
@@ -45,8 +45,8 @@ def component_season_matches(matches_df):
 
 def component_selected_match(matches_df, matches_clubs):
     # st.write(st.session_state)
-    if st.session_state["keep_row"] is not None:
-        selected_match = matches_df.iloc[st.session_state["keep_row"]]
+    if st.session_state["selected_match"] is not None:
+        selected_match = matches_df.iloc[st.session_state["selected_match"]]
         home_club = selected_match["Home Club"]
         away_club = selected_match["Away Club"]
         home_goals = selected_match["Home Goals"]
