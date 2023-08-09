@@ -23,10 +23,8 @@ seasons = utils_club.get_seasons_info()
 components_club.component_general_info(club_name, crest_id, stadium)
 components_club.component_kits(club)
 if club.club_id == 6703918:
-    col_1, col_2 = st.columns(2)
-    with col_1:
-        components_club.component_seasons(seasons)
-    with col_2:
-        components_club.components_goals(seasons)
+
+    components_club.component_seasons(seasons)
+    components_club.components_goals(seasons)
     components_club.component_grouped_seasons(seasons)
     components_club.component_trophies(seasons)
