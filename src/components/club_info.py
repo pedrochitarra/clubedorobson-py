@@ -65,7 +65,7 @@ def component_seasons(seasons: dict):
         fig.update_layout(font=dict(size=24))
         # Increase the font size of the legend
         fig.update_layout(legend=dict(font=dict(size=18)))
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
 
 
 def components_goals(seasons: dict):
@@ -91,7 +91,7 @@ def components_goals(seasons: dict):
         fig.update_yaxes(tickfont=dict(size=18))
         # Increase the font size of the title
         fig.update_layout(font=dict(size=24))
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
 
 
 def component_grouped_seasons(seasons: dict):
