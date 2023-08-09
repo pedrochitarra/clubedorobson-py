@@ -98,12 +98,18 @@ def component_selected_player(players_df):
                 title='Player Stats',
                 font=dict(size=20)
             )
-            fig.update_layout(title=dict(font=dict(size=30)))
+            # Change font color to white
+            fig.update_layout(font_color='white')
+
+            fig.update_layout(title=dict(font=dict(size=30)),
+                              paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)')
             # Show the plot
-            st.plotly_chart(fig, use_container_width=True)
+            st.image(fig.to_image(format="png"), use_column_width=True)
+            # st.plotly_chart(fig, use_container_width=True)
 
         with col_3:
-            st.image(player.image)
+            st.image(player.image, use_column_width=True)
             sub_col_1, sub_col_2, sub_col_3, sub_col_4 = st.columns(4)
             with sub_col_1:
                 if not player.isfake:
