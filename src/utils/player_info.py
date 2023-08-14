@@ -2,6 +2,8 @@
 import sqlite3
 import pandas as pd
 import numpy as np
+import streamlit as st
+import os
 
 
 POSITIONS = ['GK', 'SW', 'RWB', 'RB', 'RCB', 'CB', 'LCB', 'LB', 'LWB', 'RDM',
@@ -51,6 +53,8 @@ def get_player_vproattr(player_name: str):
     players = pd.DataFrame(players, columns=columns)
     cursor.close()
     connection.close()
+    if players.empty:
+        return None
     return players.iloc[0]["vproattr"]
 
 
@@ -72,15 +76,14 @@ def get_player_by_online_id(online_id: str) -> pd.DataFrame:
 def get_players_df(selected_club: int):
     """Get players dataframe. If CdR, join with robsoners, that are custom
     players created by CdR."""
-    players = get_players_by_club(selected_club)
+    players_df = get_players_by_club(selected_club)
     if 6703918 == selected_club:
         robsoners = get_robsoners()
         # Join players and robsoners by players' name and robsoners' name
-        players_df = robsoners.merge(players, how="left",
+        players_df = robsoners.merge(players_df, how="left",
                                      left_on="name", right_on="name")
 
         players_df.sort_values(by="number", inplace=True)
-        players_df["Details"] = False
 
         for index, row in players_df.iterrows():
             # Create a proPos column with the values of proPos_x or proPos_y
@@ -106,39 +109,59 @@ def get_players_df(selected_club: int):
                 players_df.at[index, "vproattr"] = get_player_vproattr(
                     row["name"])
 
-        # Set the name of the player position
-        players_df["proPos"] = players_df["proPos"].apply(
-            lambda x: POSITIONS[int(x)])
-        players_df["proNationality"] = players_df["proNationality"].astype(int)
         # Drop unnecessary columns
         players_df.drop(
             columns=["proPos_x", "proPos_y", "proName_x", "proHeight_y",
                     "createdAt_x", "updatedAt_x",
                     "proNationality_x", "proNationality_y"],
             inplace=True)
+
         # Rename columns
         players_df.rename(columns={"proHeight_x": "proHeight"}, inplace=True)
 
-        # Convert the nationality to the flag path
-        ea_root_folder = \
-            "https://www.ea.com/fifa/ultimate-team/web-app/content/"
-        flags_root_folder = "21D4F1AC-91A3-458D-A64E-895AA6D871D1/2021/"
-        fut_root_folder = "fut/items/images/mobile/flags/card/"
-        flag_path = ea_root_folder + flags_root_folder + fut_root_folder
-
-        players_df["proNationality"] = players_df["proNationality"].apply(
-            lambda x: flag_path + str(x) + ".png")
-        # Put proName, proPos, proNationality, number, birthDate, gamesPlayed,
-        # goals, assists and Details in the first columns
-        first_cols = ["Details", "proName", "proPos", "proNationality",
-                      "number", "birthdate", "proHeight", "weight",
-                      "gamesPlayed", "goals", "assists"]
-        players_df = players_df[first_cols + players_df.columns.difference(
-            first_cols).tolist()]
-        return players_df
     else:
-        return players
+        # For players that aren't CdR players, we don't have some names
+        for index, row in players_df.iterrows():
+            if row["proName"] is None or row["proName"] == "":
+                players_df.at[index, "proName"] = row["name"]
+        players_df["gamesPlayed"] = players_df["gamesPlayed"].apply(
+            lambda x: int(x))
+        players_df = players_df[(players_df["gamesPlayed"] > 0) &
+                                (players_df["proNationality"] != "")]
+        players_df.drop(columns=["createdAt", "updatedAt"], inplace=True)
 
+    # Set the name of the player position
+    players_df["proPos"] = players_df["proPos"].apply(
+        lambda x: POSITIONS[int(x)])
+    players_df["proNationality"] = players_df["proNationality"].astype(int)
+
+    players_df["Details"] = False
+    # For players that aren't CdR players, we set None to some columns
+    if "number" not in players_df.columns:
+        players_df["number"] = None
+    if "birthdate" not in players_df.columns:
+        players_df["birthdate"] = None
+    if "weight" not in players_df.columns:
+        players_df["weight"] = None
+
+    # Convert the nationality to the flag path
+    ea_root_folder = \
+        "https://www.ea.com/fifa/ultimate-team/web-app/content/"
+    flags_root_folder = "21D4F1AC-91A3-458D-A64E-895AA6D871D1/2021/"
+    fut_root_folder = "fut/items/images/mobile/flags/card/"
+    flag_path = ea_root_folder + flags_root_folder + fut_root_folder
+
+    players_df["proNationality"] = players_df["proNationality"].apply(
+        lambda x: flag_path + str(x) + ".png")
+    # Put proName, proPos, proNationality, number, birthDate, gamesPlayed,
+    # goals, assists and Details in the first columns
+    first_cols = ["Details", "proName", "proPos", "proNationality",
+                    "number", "birthdate", "proHeight", "weight",
+                    "gamesPlayed", "goals", "assists"]
+    players_df = players_df[first_cols + players_df.columns.difference(
+        first_cols).tolist()]
+
+    return players_df
 
 class Player:
     """Player class. It is used to create a player object with all the
@@ -147,9 +170,13 @@ class Player:
         for key, value in player_info.items():
             setattr(self, key, value)
 
-        self.image = \
-            f"assets/players/{self.proName.replace(' ', '_').upper()}.png"
-        # self.__set_nationality_flag()
+        face_image =f"assets/players/{self.proName.replace(' ', '_').upper()}.png"
+        # Check if file exists
+        if os.path.isfile(face_image):
+            self.image = face_image
+        else:
+            self.image = "https://www.fifacm.com/content/media/imgs/fifa23/players/notfound_0.png"
+
         self.__build_general_stats()
 
     def __build_stats_vproattr(self):
@@ -164,48 +191,54 @@ class Player:
             "mergulho", "manejo", "chutegoleiro", "reflexos"
         ]
 
-        vproattr_list = self.vproattr.split("|")
-        for index, attr in enumerate(attr_names):
-            if "|" in self.vproattr:
-            # Set the value of the attribute in the self object
-                setattr(self, attr, int(vproattr_list[index]))
-            else:
-                setattr(self, attr, 0)
+        # Check if vproattr is a property of the object
+        if not hasattr(self, "vproattr"):
+            self.vproattr = get_player_vproattr(self.name)
+
+        if self.vproattr is not None:
+            vproattr_list = self.vproattr.split("|")
+            for index, attr in enumerate(attr_names):
+                if "|" in self.vproattr:
+                # Set the value of the attribute in the self object
+                    setattr(self, attr, int(vproattr_list[index]))
+                else:
+                    setattr(self, attr, 0)
 
     def __build_general_stats(self):
         self.__build_stats_vproattr()
-        self.generalFinishing = \
-            int(
-                self.finalizacao * 0.45 + self.chuteslonge * 0.2 +
-                self.forcachute * 0.2 + self.posAtaque * 0.05 +
-                self.penaltis * 0.05 + self.voleio * 0.05
-            )
+        if self.vproattr is not None:
+            self.generalFinishing = \
+                int(
+                    self.finalizacao * 0.45 + self.chuteslonge * 0.2 +
+                    self.forcachute * 0.2 + self.posAtaque * 0.05 +
+                    self.penaltis * 0.05 + self.voleio * 0.05
+                )
 
-        self.generalPace = \
-            int(self.pique * 0.55 + self.aceleracao * 0.45)
+            self.generalPace = \
+                int(self.pique * 0.55 + self.aceleracao * 0.45)
 
-        self.generalPassing = \
-            int(
-                self.passecurto * 0.35 + self.visao * 0.2 +
-                self.cruzamento * 0.2 + self.lancamento * 0.15 +
-                self.curva * 0.05 + self.cobrancafalta * 0.05
-            )
+            self.generalPassing = \
+                int(
+                    self.passecurto * 0.35 + self.visao * 0.2 +
+                    self.cruzamento * 0.2 + self.lancamento * 0.15 +
+                    self.curva * 0.05 + self.cobrancafalta * 0.05
+                )
 
-        self.generalDribbling = \
-            int(
-                self.conducao * 0.5 + self.controlebola * 0.35 +
-                self.agilidade * 0.1 + self.equilibrio * 0.05
-            )
+            self.generalDribbling = \
+                int(
+                    self.conducao * 0.5 + self.controlebola * 0.35 +
+                    self.agilidade * 0.1 + self.equilibrio * 0.05
+                )
 
-        self.generalDefending = \
-            int(
-                self.nocaodefensiva * 0.3 + self.divididaempe * 0.3 +
-                self.interceptacao * 0.2 + self.cabeceio * 0.1 +
-                self.carrinho * 0.1
-            )
+            self.generalDefending = \
+                int(
+                    self.nocaodefensiva * 0.3 + self.divididaempe * 0.3 +
+                    self.interceptacao * 0.2 + self.cabeceio * 0.1 +
+                    self.carrinho * 0.1
+                )
 
-        self.generalPhysical = \
-            int(
-                self.forca * 0.5 + self.folego * 0.25 +
-                self.combatividade * 0.2 + self.impulsao * 0.05
-            )
+            self.generalPhysical = \
+                int(
+                    self.forca * 0.5 + self.folego * 0.25 +
+                    self.combatividade * 0.2 + self.impulsao * 0.05
+                )
