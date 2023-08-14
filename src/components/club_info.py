@@ -3,17 +3,18 @@ general information of the club, such as the club name, crest, stadium name,
 stadium capacity, stadium image, home and away kits, seasons information, goals
 information, trophies information and last matches information."""
 import streamlit as st
-import src.utils.club_info as club_info
-import plotly.graph_objects as go
-from src.utils.club_info import Club
 import numpy as np
 from PIL import Image
 import requests
 from io import BytesIO
 import pandas as pd
+import base64
+import plotly.graph_objects as go
+import src.utils.club_info as utils_club
+import src.utils.image_info as utils_image
 
 
-def component_general_info(club: Club):
+def component_general_info(club: utils_club.Club):
     """Component containing the general information of the club. This includes
     the club name, crest, stadium name, stadium capacity and stadium image.
     All this information is inside the Club object.
@@ -21,30 +22,27 @@ def component_general_info(club: Club):
     Args:
         club: Club object containing the club information
     """
-    with st.container():
-        # Define the text with a big font size using HTML tags
-        team_name = f"<h2 style='text-align: center;'>{club.club_name}</h1>"
-        # Render the big text using Markdown
-        st.markdown(team_name, unsafe_allow_html=True)
-        col_1, col_2 = st.columns(2)
-        # Display the crest and stadium image
-        with col_1:
-            crest_image = club.crest_path
-            st.image(crest_image, use_column_width=True)
-
-        with col_2:
-            stadium_image = club.stadium_path
-            st.image(stadium_image, use_column_width=True)
-            stadium_name = \
-                f"<p style='text-align: center;'>{club.stadium_name}</p>"
-            st.markdown(stadium_name, unsafe_allow_html=True)
-            st.markdown(
-                f"""<p style='text-align: center;'>Capacity:
-                {club.stadium_capacity}</p>""",
-                unsafe_allow_html=True)
+    team_name = f"<h2 style='text-align: center;'>{club.club_name}</h1>"
+    st.markdown(team_name, unsafe_allow_html=True)
+    # Write in HTML two columns. The first column contains the crest and the
+    # second column contains the stadium image, stadium name and stadium
+    # capacity.
+    st.markdown(
+        f"<div style='display: flex; width: 100%;'>"
+        f"<div style='width: 50%; text-align: center;'>"
+        f"<img src='{club.crest_path}' width='100%'>"
+        f"</div>"
+        f"<div style='width: 50%; text-align: center;'>"
+        f"<img src='{club.stadium_path}' width='100%'>"
+        f"<h3>{club.stadium_name}</h3>"
+        f"<h3>Capacity: {club.stadium_capacity}</h3>"
+        f"</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
 
 
-def component_kits(club: Club):
+def component_kits(club: utils_club.Club):
     """Component containing the home and away kits of the club. This includes
     the home and away kit images. All this information is inside the Club
     object.
@@ -52,13 +50,19 @@ def component_kits(club: Club):
     Args:
         club: Club object containing the club information
     """
-    with st.container():
-        col_1, col_2 = st.columns(2)
-        with col_1:
-            st.image(club.home_kit_path, use_column_width=True)
-        with col_2:
-            st.image(club.away_kit_path, use_column_width=True)
-
+    # Write in HTML two columns. The first column contains the home kit and the
+    # second column contains the away kit.
+    st.markdown(
+        f"<div style='display: flex; width: 100%;'>"
+        f"<div style='width: 50%; text-align: center;'>"
+        f"<img src='{club.home_kit_path}' width='100%'>"
+        f"</div>"
+        f"<div style='width: 50%; text-align: center;'>"
+        f"<img src='{club.away_kit_path}' width='100%'>"
+        f"</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
 
 def component_seasons(seasons: dict):
     """Component containing the seasons information of the club. This includes
@@ -76,7 +80,7 @@ def component_seasons(seasons: dict):
         fig = go.Figure(
             data=[
                 go.Bar(name="General history", x=["Wins", "Draws", "Losses"],
-                       y=[wins, draws, losses])
+                       y=[wins, draws, losses], hoverinfo='none')
             ])
         # Set the colors of the bars and the text inside the bars
         fig.update_traces(marker=dict(color=["#47cc4e", "#ffcc00", "#ff0000"]),
@@ -85,7 +89,18 @@ def component_seasons(seasons: dict):
         fig.update_layout(title="General history")
         # Increase the font size of the title and the legend
         fig.update_layout(font=dict(size=24), legend=dict(font=dict(size=18)))
-        st.plotly_chart(fig, use_container_width=True)
+        # Disable zoom and pan
+        fig.update_layout(
+            xaxis=dict(fixedrange=True),
+            yaxis=dict(fixedrange=True),
+        )
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            font_color='white',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        st.image(fig.to_image(format="png"), use_column_width=True)
+        # st.plotly_chart(fig, use_container_width=True)
 
 
 def components_goals(seasons: dict):
@@ -116,7 +131,12 @@ def components_goals(seasons: dict):
         fig.update_yaxes(tickfont=dict(size=18))
         # Increase the font size
         fig.update_layout(font=dict(size=24))
-        st.plotly_chart(fig, use_container_width=True)
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            font_color='white',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        st.image(fig.to_image(format="png"), use_column_width=True)
 
 
 def component_grouped_seasons(seasons: dict):
@@ -134,16 +154,30 @@ def component_grouped_seasons(seasons: dict):
     holds = seasons["holds"]
     relegations = seasons["relegations"]
 
-    with st.container():
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Seasons", n_seasons)
-        col2.metric("Titles", titles_won)
-        col3.metric("Best division", best_division)
-
-        col4, col5, col6 = st.columns(3)
-        col4.metric("Promotions", promotions)
-        col5.metric("Holds", holds)
-        col6.metric("Relegations", relegations)
+    # Write in HTML two columns. The first column contains seasons, titles and
+    # best division text and values. The second column contains promotions,
+    # holds and relegations text and values.
+    st.markdown(
+        f"<div style='display: flex; width: 100%;'>"
+        f"<div style='width: 50%; text-align: center;'>"
+        f"<h1>Seasons</h1>"
+        f"<h2>{n_seasons}</h2>"
+        f"<h1>Titles</h1>"
+        f"<h2>{titles_won}</h2>"
+        f"<h1>Best division</h1>"
+        f"<h2>{best_division}</h2>"
+        f"</div>"
+        f"<div style='width: 50%; text-align: center;'>"
+        f"<h1>Promotions</h1>"
+        f"<h2>{promotions}</h2>"
+        f"<h1>Holds</h1>"
+        f"<h2>{holds}</h2>"
+        f"<h1>Relegations</h1>"
+        f"<h2>{relegations}</h2>"
+        f"</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
 
 
 def component_trophies(seasons: dict):
@@ -158,45 +192,46 @@ def component_trophies(seasons: dict):
     div_2_won = seasons["div_2_won"]
     div_3_won = seasons["div_3_won"]
     div_4_won = seasons["div_4_won"]
-    with st.container():
-        col_1, col_2, col_3, col_4 = st.columns(4)
-        with col_1:
-            # First division trophies
-            st.image("assets/trophies/league_final.png", use_column_width=True)
-            st.markdown(
-                f"<h3 style='text-align: center;'>{league_wins}</h3>",
-                unsafe_allow_html=True)
-            st.markdown(
-                "<h4 style='text-align: center;'>League wins</h4>",
-                unsafe_allow_html=True)
-        with col_2:
-            # Second and third division trophies
-            st.image("assets/trophies/2-3_final.png", use_column_width=True)
-            st.markdown(
-                f"<h3 style='text-align: center;'>{div_2_won}</h3>",
-                unsafe_allow_html=True)
-            st.markdown(
-                "<h4 style='text-align: center;'>Division 2 and 3</h4>",
-                unsafe_allow_html=True)
-        with col_3:
-            # Fourth to seventh division trophies
-            st.image("assets/trophies/4-5-6-7_final.png",
-                     use_column_width=True)
-            st.markdown(
-                f"<h3 style='text-align: center;'>{div_3_won}</h3>",
-                unsafe_allow_html=True)
-            st.markdown(
-                "<h4 style='text-align: center;'>Division 4 to 7</h4>",
-                unsafe_allow_html=True)
-        with col_4:
-            # Eighth to tenth division trophies
-            st.image("assets/trophies/8-9-10_final.png", use_column_width=True)
-            st.markdown(
-                f"<h3 style='text-align: center;'>{div_4_won}</h3>",
-                unsafe_allow_html=True)
-            st.markdown(
-                "<h4 style='text-align: center;'>Division 8 to 10</h4>",
-                unsafe_allow_html=True)
+
+    league_wins_url = utils_image.create_blob_from_file(
+        "assets/trophies/league_final.png")
+
+    div_2_won_url = utils_image.create_blob_from_file(
+        "assets/trophies/2-3_final.png")
+
+    div_3_won_url = utils_image.create_blob_from_file(
+        "assets/trophies/4-5-6-7_final.png")
+
+    div_4_won_url = utils_image.create_blob_from_file(
+        "assets/trophies/8-9-10_final.png")
+
+    # Write in HTML 4 columns with the trophies images and the number of
+    # trophies, also the name of the trophy.
+    st.markdown(
+        f"<div style='display: flex; width: 100%;'>"
+        f"<div style='width: 25%; text-align: center;'>"
+        f"<img src='data:image/png;base64,{league_wins_url}' width='100%'>"
+        f"<h3>{league_wins}</h3>"
+        f"<h4>League wins</h4>"
+        f"</div>"
+        f"<div style='width: 25%; text-align: center;'>"
+        f"<img src='data:image/png;base64,{div_2_won_url}' width='100%'>"
+        f"<h3>{div_2_won}</h3>"
+        f"<h4>Division 2 and 3</h4>"
+        f"</div>"
+        f"<div style='width: 25%; text-align: center;'>"
+        f"<img src='data:image/png;base64,{div_3_won_url}' width='100%'>"
+        f"<h3>{div_3_won}</h3>"
+        f"<h4>Division 4 to 7</h4>"
+        f"</div>"
+        f"<div style='width: 25%; text-align: center;'>"
+        f"<img src='data:image/png;base64,{div_4_won_url}' width='100%'>"
+        f"<h3>{div_4_won}</h3>"
+        f"<h4>Division 8 to 10</h4>"
+        f"</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
 
 
 def component_last_matches(matches: pd.DataFrame):
@@ -226,7 +261,7 @@ def component_last_matches(matches: pd.DataFrame):
     # For each match, include the opponent club crest on top of the bar.
     for i, row in matches.iterrows():
         opponent_club_id = row['opponent_club_id']
-        opponent_club = club_info.get_club_info(opponent_club_id)
+        opponent_club = utils_club.get_club_info(opponent_club_id)
         # Get the image from the url and add it to the plotly figure
         response = requests.get(opponent_club.crest_path)
         img = Image.open(BytesIO(response.content))
@@ -238,5 +273,25 @@ def component_last_matches(matches: pd.DataFrame):
                 opacity=1, layer="above"
             )
         )
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        font_color='white',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
 
-    st.plotly_chart(fig, use_container_width=True)
+    # Set width and height of the image
+    fig.update_layout(width=1000, height=500)
+
+    last_10_games_url = base64.b64encode(
+        fig.to_image(format='png')).decode("utf-8")
+
+    # Write in HTML a image centered with src="a.png"
+    st.markdown(
+        f"<div style='display: flex; width: 100%;'>"
+        f"<div style='width: 100%; text-align: center;'>"
+        f"<img src='data:image/png;base64,{last_10_games_url}'"
+        f"width='100%'>"
+        f"</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )

@@ -1,3 +1,4 @@
+"""Functions and class to get club information from database."""
 import pandas as pd
 import sqlite3
 import numpy as np

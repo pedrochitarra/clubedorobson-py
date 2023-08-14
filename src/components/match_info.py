@@ -4,6 +4,8 @@ import src.utils.match_info as utils_match
 import src.utils.player_info as utils_player
 import src.components.player_info as components_player
 import pandas as pd
+import base64
+import src.utils.image_info as utils_image
 
 
 def update_edited_rows():
@@ -27,17 +29,22 @@ def component_season_matches(matches_df: pd.DataFrame):
     details of a match by clicking on it."""
     if "selected_match" not in st.session_state:
         st.session_state["selected_match"] = None
+
     st.data_editor(
         matches_df,
         column_config={
-            "Home Goals": st.column_config.TextColumn("H ⚽"),
-            "Away Goals": st.column_config.TextColumn("A ⚽"),
+            "Details": st.column_config.CheckboxColumn("🔍"),
+            "Home Club": None, "Away Club": None,
+            "Home Goals": st.column_config.TextColumn("⚽"),
+            "Away Goals": st.column_config.TextColumn("⚽"),
             "Home Crest": st.column_config.ImageColumn(""),
             "Away Crest": st.column_config.ImageColumn(""),
             "Stadium": st.column_config.ImageColumn("🏟️"),
-            "Timestamp": st.column_config.TextColumn("⏰"),
+            "Timestamp": None,
             "match_id": None, "home_club_id": None, "away_club_id": None,
             "stadium_name": None, "attendance": None},
+        column_order=["Details", "Home Crest", "Home Goals", "Away Goals",
+                        "Away Crest", "Stadium"],
         hide_index=True, key="matches_element",
         on_change=update_edited_rows, use_container_width=True
     )
@@ -61,17 +68,29 @@ def component_selected_match(matches_df: pd.DataFrame,
         home_goals = selected_match["Home Goals"]
         away_goals = selected_match["Away Goals"]
 
-        col_1, col_2, col_3 = st.columns(3)
-        with col_1:
-            st.image(selected_match["Home Crest"], width=64)
-        with col_2:
-            st.write(f"{home_club} {home_goals} x {away_goals} {away_club}")
-        with col_3:
-            st.image(selected_match["Away Crest"], width=64)
-        st.image(selected_match["Stadium"], width=256)
-        st.write(selected_match["stadium_name"])
-        st.metric("", selected_match["Timestamp"])
-        st.metric("Attendance", selected_match["attendance"])
+        # Write in HTML the home and away clubs and crests and the score in a
+        # column. Also write the stadium image, name and the attendance in
+        # another column.
+        st.markdown(
+            f"<div style='display: flex; width: 100%;'>"
+            f"<div style='width: 50%; text-align: center;'>"
+            f"<img src='{selected_match['Home Crest']}' width='15%'>"
+            f"<h2 style='display: inline-block; margin: 0px 10px;'>"
+            f"{home_club}<br>{home_goals} x {away_goals}<br>{away_club}</h2>"
+            f"<img src='{selected_match['Away Crest']}' width='15%'>"
+            f"</div>"
+            f"<div style='width: 50%; text-align: center;'>"
+            f"<img src='{selected_match['Stadium']}' width='50%'>"
+            f"<h2 style='display: inline-block; margin: 0px 10px;'>"
+            f"{selected_match['stadium_name']} <br>"
+            f"{selected_match['attendance']} spectators</h2>"
+            f"<h3 style='display: inline-block; margin: 0px 10px;'>"
+            f"{selected_match['Timestamp']}</h3>"
+            f"</div>"
+            f"</div>",
+            unsafe_allow_html=True
+        )
+
         match_stats = matches_clubs[
             matches_clubs["matchId"] == selected_match["match_id"]]
         home_tab, away_tab = st.tabs(
@@ -96,6 +115,7 @@ def component_selected_match(matches_df: pd.DataFrame,
 def component_players_in_match(players_match: pd.DataFrame):
     """Component to show players involved in a match and their stats."""
     st.header("Players")
+    st.divider()
     for _, player_row in players_match.iterrows():
         player = utils_player.get_player_by_online_id(
             player_row["name"])
@@ -109,29 +129,97 @@ def component_players_in_match(players_match: pd.DataFrame):
             components_player.component_radial_chart(player)
 
         with col_2:
-            st.metric("Rating", player_row["rating"])
-            st.metric("Goals", player_row["goals"])
-            st.metric("Shots", player_row["shots"])
-            st.metric("Tackle attempts", player_row["tackleattempts"])
-            st.metric("Tackles made", player_row["tacklesmade"])
-            st.metric("Assists", player_row["assists"])
-            st.metric("Pass attempts", player_row["passattempts"])
-            st.metric("Passes made", player_row["passesmade"])
+            # Write in HTML three columns. The first one with rating, goals,
+            # and shots text and values. The second one with tackle attempts
+            # and tackles made text and values. The third one with assists,
+            # pass attempts and passes made text and values.
+            st.markdown(
+                f"<div style='display: flex; width: 100%;'>"
+                f"<div style='width: 33%; text-align: center;'>"
+                f"Rating"
+                f"<h3 style='display: inline-block; margin: 0px 10px;'>"
+                f"{player_row['rating']}</h3>"
+                f"Goals"
+                f"<h3 style='display: inline-block; margin: 0px 10px;'>"
+                f"{player_row['goals']}</h3>"
+                f"Shots"
+                f"<h3 style='display: inline-block; margin: 0px 10px;'>"
+                f"{player_row['shots']}</h3>"
+                f"</div>"
+                f"<div style='width: 33%; text-align: center;'>"
+                f"Tackle attempts"
+                f"<h3 style='display: inline-block; margin: 0px 10px;'>"
+                f"{player_row['tackleattempts']}</h3>"
+                f"Tackles made"
+                f"<h3 style='display: inline-block; margin: 0px 10px;'>"
+                f"{player_row['tacklesmade']}</h3>"
+                f"</div>"
+                f"<div style='width: 33%; text-align: center;'>"
+                f"Assists"
+                f"<h3 style='display: inline-block; margin: 0px 10px;'>"
+                f"{player_row['assists']}</h3>"
+                f"Pass attempts"
+                f"<h3 style='display: inline-block; margin: 0px 10px;'>"
+                f"{player_row['passattempts']}</h3>"
+                f"Passes made"
+                f"<h3 style='display: inline-block; margin: 0px 10px;'>"
+                f"{player_row['passesmade']}</h3>"
+                f"</div>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+
         st.divider()
 
 
 def component_club_stats_in_match(club_stats: pd.DataFrame):
     """Component to show club stats in a match"""
-    col_1, col_2, col_3 = st.columns(3)
-    with col_1:
-        st.image("assets/football-icons/passes.png", width=50)
-        col_1.metric("Passes", club_stats["passattempts"].values[0])
-        col_1.metric("Passes Completed", club_stats["passesmade"].values[0])
-    with col_2:
-        st.image("assets/football-icons/player.png", width=50)
-        col_2.metric("Shots", club_stats["shots"].values[0])
-        col_2.metric("Goals", club_stats["goals"].values[0])
-    with col_3:
-        st.image("assets/football-icons/tackle.png", width=50)
-        col_3.metric("Tackle Attempts", club_stats["tackleattempts"].values[0])
-        col_3.metric("Tackles Made", club_stats["tacklesmade"].values[0])
+    # Write in HTML three columns. The first one with the passes image,
+    # passes and passes completed. The second one with the shots image,
+    # shots and goals. The third one with the tackle image, tackle attempts
+    # and tackles made.
+
+    tackle_url = utils_image.create_blob_from_file(
+        "assets/football-icons/tackle.png"
+    )
+
+    passes_url = utils_image.create_blob_from_file(
+        "assets/football-icons/passes.png"
+    )
+
+    player_url = utils_image.create_blob_from_file(
+        "assets/football-icons/player.png"
+    )
+
+    st.markdown(
+        f"<div style='display: flex; width: 100%;'>"
+        f"<div style='width: 33%; text-align: center;'>"
+        f"<img src='data:image/png;base64,{passes_url}' width='50%'>"
+        f"<br>Passes"
+        f"<h2 style='display: inline-block; margin: 0px 10px;'>"
+        f"{club_stats['passattempts'].values[0]} <br> </h2>"
+        f"<br>Passes Completed"
+        f"<h2 style='display: inline-block; margin: 0px 10px;'>"
+        f"{club_stats['passesmade'].values[0]}</h2>"
+        f"</div>"
+        f"<div style='width: 33%; text-align: center;'>"
+        f"<img src='data:image/png;base64,{player_url}' width='50%'>"
+        f"<br>Shots"
+        f"<h2 style='display: inline-block; margin: 0px 10px;'>"
+        f"{club_stats['shots'].values[0]} <br></h2>"
+        f"<br>Goals"
+        f"<h2 style='display: inline-block; margin: 0px 10px;'>"
+        f"{club_stats['goals'].values[0]}</h2>"
+        f"</div>"
+        f"<div style='width: 33%; text-align: center;'>"
+        f"<img src='data:image/png;base64,{tackle_url}' width='50%'>"
+        f"<br>Tackle Attempts"
+        f"<h2 style='display: inline-block; margin: 0px 10px;'>"
+        f"{club_stats['tackleattempts'].values[0]} <br></h2>"
+        f"<br>Tackles Made"
+        f"<h2 style='display: inline-block; margin: 0px 10px;'>"
+        f"{club_stats['tacklesmade'].values[0]}</h2>"
+        f"</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
