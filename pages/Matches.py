@@ -4,6 +4,7 @@ import streamlit as st
 import src.utils.match_info as utils_match
 import src.components.match_info as components_match
 
+
 st.set_page_config(layout="wide")
 
 # Get seasons list to select

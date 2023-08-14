@@ -3,6 +3,7 @@ import streamlit as st
 import src.utils.player_info as player_info
 import plotly.graph_objects as go
 import pandas as pd
+import base64
 
 
 def update_edited_rows():
@@ -36,6 +37,7 @@ def component_club_players(players_df: pd.DataFrame):
         hide_index=True,
         on_change=update_edited_rows,
         column_config={
+            "Details": st.column_config.CheckboxColumn("🔍"),
             "memberid": None, "name": None, "vproattr": None,
             "proName": st.column_config.TextColumn("Name"),
             "number": st.column_config.NumberColumn("#"),
@@ -43,7 +45,7 @@ def component_club_players(players_df: pd.DataFrame):
             "proHeight": st.column_config.NumberColumn("Height (cm)"),
             "weight": st.column_config.NumberColumn("Weight (kg)"),
             "face": None, "isfake": None,
-            "proPos": st.column_config.TextColumn("ProPos"),
+            "proPos": st.column_config.TextColumn("Pos"),
             "gamesPlayed": st.column_config.TextColumn("Games"),
             "goals": st.column_config.TextColumn("⚽"),
             "assists": st.column_config.TextColumn("🅰️"),
@@ -69,45 +71,91 @@ def component_selected_player(players_df: pd.DataFrame):
     if st.session_state["selected_player"] is not None:
         selected_player = players_df.iloc[st.session_state["selected_player"]]
         player = player_info.Player(selected_player.to_dict())
-        col_1, col_2, col_3 = st.columns(3)
-        with col_1:
-            st.header(player.proName)
-            st.subheader(player.proPos)
-            st.metric("Number", player.number)
-            st.metric("Height (cm)", player.proHeight)
-            st.metric("Weight (kg)", player.weight)
-            st.metric("Born", player.birthdate)
-            st.image(player.proNationality)
-
-        with col_2:
-            component_radial_chart(player)
-
-        with col_3:
-            st.image(player.image, use_column_width=True)
-            sub_col_1, sub_col_2, sub_col_3, sub_col_4 = st.columns(4)
-            with sub_col_1:
-                if not player.isfake:
-                    st.metric("Games", player.gamesPlayed)
-                    st.metric("Win %", player.winRate)
-                    st.metric("MOTM", player.manOfTheMatch)
-            with sub_col_2:
-                if not player.isfake:
-                    st.metric("Goals", player.goals)
-                    st.metric("Assists", player.assists)
-                    st.metric("Overall", player.proOverall)
-            with sub_col_3:
-                if not player.isfake:
-                    st.metric("Passes", player.passesMade)
-                    st.metric("Passes %", player.passSuccessRate)
-                    st.metric("Shot %", player.shotSuccessRate)
-            with sub_col_4:
-                if not player.isfake:
-                    st.metric("Tackles", player.tacklesMade)
-                    st.metric("Tackles %", player.tackleSuccessRate)
-                    st.metric("Red Cards", player.redCards)
 
 
-def component_radial_chart(player: player_info.Player):
+        file_ = open(player.image, "rb")
+        contents = file_.read()
+        player_face_url = base64.b64encode(contents).decode("utf-8")
+        file_.close()
+
+        radar_chart = component_radial_chart(player, return_image=True)
+        radar_chart_url = base64.b64encode(radar_chart).decode("utf-8")
+
+        # Write in HTML three columns. The first one has the player image, the
+        # position, the number, the height, the weight, the birthdate and the
+        # nationality. The second one has a radar chart with the player stats.
+        st.markdown(
+            f"<div style='display: flex; width: 100%;'>"
+                f"<div style='width: 50%;'>"
+                    f"<img src='data:image/png;base64,{player_face_url}' "
+                    f"style='width: 100%;'>"
+                    f"<br><br>"
+                    f"<div style='display: flex; justify-content: center;'>"
+                        f"<img src='{player.proNationality}' width='50%'>"
+                    f"</div>"
+                f"</div>"
+
+                f"<div style='width: 50%;'>"
+                    f"<img src='data:image/png;base64,{radar_chart_url}' "
+                    f"style='width: 100%;'>"
+                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"{player.proPos}</h3>"
+                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"{player.number}</h3>"
+                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"{player.proHeight} cm</h3>"
+                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"{player.weight} kg</h3>"
+                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"{player.birthdate}</h3>"
+                f"</div>"
+        , unsafe_allow_html=True)
+
+        # Write in HTML four columns. The first one has the
+        # games, win%, MOTM. The second one has the goals, assists and overall.
+        # The third one has the passes, passes% and shot%. The fourth one has
+        # the tackles, tackles% and red cards.
+
+        stats_list = [player.gamesPlayed, player.winRate, player.manOfTheMatch,
+                      player.goals, player.assists, player.proOverall,
+                      player.passesMade, player.passSuccessRate,
+                      player.shotSuccessRate, player.tacklesMade,
+                      player.tackleSuccessRate, player.redCards]
+
+        stats_names = ["Games", "Win %", "MOTM", "Goals", "Assists", "Overall",
+                    "Passes", "Passes %", "Shot %", "Tackles", "Tackles %",
+                    "Red Cards"]
+
+        base_html = "<div style='display: flex; width: 100%;'>"
+        for i in range(0, 4):
+            stats_column = stats_list[i*3:(i+1)*3]
+            stats_names_column = stats_names[i*3:(i+1)*3]
+            base_html += \
+                f"""
+                <div style='width: 25%;'>
+                    <p style='text-align: center; font-weight: bold;'>
+                        {stats_names_column[0]}</p>
+                    <h3 style='text-align: center; font-weight: bold;'>
+                        {stats_column[0]}</h3>
+                    <p style='text-align: center; font-weight: bold;'>
+                        {stats_names_column[1]}</p>
+                    <h3 style='text-align: center; font-weight: bold;'>
+                        {stats_column[1]}</h3>
+                    <p style='text-align: center; font-weight: bold;'>
+                        {stats_names_column[2]}</p>
+                    <h3 style='text-align: center; font-weight: bold;'>
+                        {stats_column[2]}</h3>
+                </div>
+                """
+
+        base_html += "</div>"
+        # Remove empty lines from the HTML
+        base_html = base_html.replace("\n", "")
+        st.markdown(base_html, unsafe_allow_html=True)
+
+
+def component_radial_chart(player: player_info.Player,
+                           return_image: bool = False):
     """Component to show a radar chart with the player stats.
 
     Args:
@@ -142,4 +190,8 @@ def component_radial_chart(player: player_info.Player):
     )
     fig.update_layout(title=dict(font=dict(size=30)))
     # Show the plot
-    st.image(fig.to_image(format="png"), use_column_width=True)
+    if not return_image:
+        st.image(fig.to_image(format="png"), use_column_width=True)
+        return None
+    else:
+        return fig.to_image(format="png")
