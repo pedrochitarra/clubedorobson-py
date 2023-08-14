@@ -22,8 +22,5 @@ selected_club = st.selectbox(
     index=cdr_index)
 
 players_df = player_info.get_players_df(selected_club)
-if selected_club == 6703918:
-    components_players.component_club_players(players_df)
-    components_players.component_selected_player(players_df)
-else:
-    st.write(players_df)
+components_players.component_club_players(players_df)
+components_players.component_selected_player(players_df)
