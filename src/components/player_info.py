@@ -4,6 +4,7 @@ import src.utils.player_info as player_info
 import plotly.graph_objects as go
 import pandas as pd
 import base64
+import src.utils.image_info as utils_image
 
 
 def update_edited_rows():
@@ -31,7 +32,6 @@ def component_club_players(players_df: pd.DataFrame):
     """
     if "selected_player" not in st.session_state:
         st.session_state["selected_player"] = None
-
     st.data_editor(
         players_df, key="players_element", use_container_width=True,
         hide_index=True,
@@ -46,7 +46,7 @@ def component_club_players(players_df: pd.DataFrame):
             "weight": st.column_config.NumberColumn("Weight (kg)"),
             "face": None, "isfake": None,
             "proPos": st.column_config.TextColumn("Pos"),
-            "gamesPlayed": st.column_config.TextColumn("Games"),
+            "gamesPlayed": st.column_config.NumberColumn("Games"),
             "goals": st.column_config.TextColumn("⚽"),
             "assists": st.column_config.TextColumn("🅰️"),
             "proNationality": st.column_config.ImageColumn("Country"),
@@ -72,14 +72,21 @@ def component_selected_player(players_df: pd.DataFrame):
         selected_player = players_df.iloc[st.session_state["selected_player"]]
         player = player_info.Player(selected_player.to_dict())
 
-
-        file_ = open(player.image, "rb")
-        contents = file_.read()
-        player_face_url = base64.b64encode(contents).decode("utf-8")
-        file_.close()
+        player_face_url = utils_image.create_blob_from_file(
+            player.image
+        )
 
         radar_chart = component_radial_chart(player, return_image=True)
         radar_chart_url = base64.b64encode(radar_chart).decode("utf-8")
+
+        if player.number is None:
+            player.number = "N/A"
+        if player.proHeight is None:
+            player.proHeight = "N/A"
+        if player.weight is None:
+            player.weight = "N/A"
+        if player.birthdate is None:
+            player.birthdate = "N/A"
 
         # Write in HTML three columns. The first one has the player image, the
         # position, the number, the height, the weight, the birthdate and the
@@ -87,25 +94,32 @@ def component_selected_player(players_df: pd.DataFrame):
         st.markdown(
             f"<div style='display: flex; width: 100%;'>"
                 f"<div style='width: 50%;'>"
+                    f"<div style='display: flex; justify-content: center;'>"
                     f"<img src='data:image/png;base64,{player_face_url}' "
-                    f"style='width: 100%;'>"
+                    f"style='width: 80%;'>"
+                    f"</div>"
                     f"<br><br>"
                     f"<div style='display: flex; justify-content: center;'>"
-                        f"<img src='{player.proNationality}' width='50%'>"
+                        f"<img src='{player.proNationality}' width='30%'>"
                     f"</div>"
                 f"</div>"
 
                 f"<div style='width: 50%;'>"
                     f"<img src='data:image/png;base64,{radar_chart_url}' "
                     f"style='width: 100%;'>"
+                f"<p style='text-align: center;  font-weight: bold;'> Position </p>"
                 f"<h3 style='text-align: center;  font-weight: bold;'>"
                 f"{player.proPos}</h3>"
+                f"<p style='text-align: center;  font-weight: bold;'> Number </p>"
                 f"<h3 style='text-align: center;  font-weight: bold;'>"
                 f"{player.number}</h3>"
+                f"<p style='text-align: center;  font-weight: bold;'> Height </p>"
                 f"<h3 style='text-align: center;  font-weight: bold;'>"
                 f"{player.proHeight} cm</h3>"
+                f"<p style='text-align: center;  font-weight: bold;'> Weight </p>"
                 f"<h3 style='text-align: center;  font-weight: bold;'>"
                 f"{player.weight} kg</h3>"
+                f"<p style='text-align: center;  font-weight: bold;'> Birthdate </p>"
                 f"<h3 style='text-align: center;  font-weight: bold;'>"
                 f"{player.birthdate}</h3>"
                 f"</div>"
@@ -164,31 +178,68 @@ def component_radial_chart(player: player_info.Player,
     categories = [
         "Finishing", "Pace", "Passing", "Dribbling",
         "Defending", "Physical"]
-    values = [
-        player.generalFinishing, player.generalPace,
-        player.generalPassing, player.generalDribbling,
-        player.generalDefending, player.generalPhysical
-    ]
 
-    # Create a radar chart using Scatterpolar
-    fig = go.Figure()
+    if player.vproattr is not None:
+        values = [
+            player.generalFinishing, player.generalPace,
+            player.generalPassing, player.generalDribbling,
+            player.generalDefending, player.generalPhysical
+        ]
+        # Create a radar chart using Scatterpolar
+        fig = go.Figure()
 
-    fig.add_trace(go.Scatterpolar(
-        r=values, theta=categories, text=values, fill='toself',
-        marker=dict(color='rgba(255, 0, 0, 0.5)'), name='Player Stats'
-    ))
-    # Update layout
-    fig.update_layout(
-        polar=dict(radialaxis=dict(visible=False,
-                                   tickfont=dict(color='black', size=20),
-                                   range=[50, 100])),
-        title='Player Stats',
-        font=dict(size=20),
-        font_color='white',
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
-    )
-    fig.update_layout(title=dict(font=dict(size=30)))
+        fig.add_trace(go.Scatterpolar(
+            r=values, theta=categories, text=values, fill='toself',
+            marker=dict(color='rgba(255, 0, 0, 0.5)'), name='Player Stats'
+        ))
+        # Update layout
+        fig.update_layout(
+            polar=dict(radialaxis=dict(visible=False,
+                                    tickfont=dict(color='black', size=20),
+                                    range=[50, 100])),
+            title='Player Stats',
+            font=dict(size=20),
+            font_color='white',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        fig.update_layout(title=dict(font=dict(size=30)))
+    else:
+        empty_trace = go.Scatterpolar(r=[], theta=[], mode='markers')
+
+        # Create a layout for the plot (optional)
+        layout = go.Layout(
+            polar=dict(
+                radialaxis=dict(visible=True),
+                angularaxis=dict(visible=True)
+            )
+        )
+
+        # Create a Figure with the empty trace and layout
+        fig = go.Figure(data=[empty_trace], layout=layout)
+        fig.update_layout(
+            polar=dict(radialaxis=dict(visible=False,
+                                    tickfont=dict(color='black', size=20),
+                                    range=[50, 100])),
+            title='Player Stats',
+            font=dict(size=20),
+            font_color='white',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
+        # Hide axis ticks and labels
+        fig.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=False,
+                    range=[0, 100]
+                ),
+                angularaxis=dict(
+                    visible=False
+                )
+            )
+        )
+        fig.show()
     # Show the plot
     if not return_image:
         st.image(fig.to_image(format="png"), use_column_width=True)
