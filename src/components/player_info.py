@@ -5,22 +5,32 @@ import plotly.graph_objects as go
 import pandas as pd
 import base64
 import src.utils.image_info as utils_image
+import numpy as np
 
 
 def update_edited_rows():
     """For component component_club_players, it's necessary to update
     st.session_state.selected_player with the new value of
-    st.session_state.edited_rows."""
-    # Get keys from st.session_state.edited_rows that are not in
-    # st.session_state.custom_edited_rows
-    edited_rows = st.session_state.players_element["edited_rows"]
-    # Keep only the highest value of edited_rows dict
-    edited_rows = [(k, v["Details"]) for (k, v) in edited_rows.items()]
-    # Get elements from edited_rows that the second element is True
-    edited_rows = [row[0] for row in edited_rows if row[1]]
-    # Keep only the highest value of edited_rows list
-    selected_player = max(edited_rows) if len(edited_rows) > 0 else None
-    st.session_state["selected_player"] = selected_player
+    st.session_state.edited_rows. Here we use a workaround to get the selected
+    player and reset the Details column to False. We do this by changing the
+    component key to "players_element_edited" and then to "players_element".
+    This way streamlit will update the component and we can get the selected
+    player.
+    """
+    if "data_editor_key" in st.session_state:
+        # Get keys from st.session_state.edited_rows that are not in
+        # st.session_state.custom_edited_rows
+        edited_rows = st.session_state[
+            f"{st.session_state['data_editor_key']}"]["edited_rows"]
+        # Keep only the highest value of edited_rows dict
+        edited_rows = [(k, v["Details"]) for (k, v) in edited_rows.items()]
+        # Get elements from edited_rows that the second element is True
+        edited_rows = [row[0] for row in edited_rows if row[1]]
+        # Keep only the highest value of edited_rows list
+        selected_player = max(edited_rows) if len(edited_rows) > 0 else None
+        st.session_state["selected_player"] = selected_player
+        st.session_state[
+            f"{st.session_state['data_editor_key']}"]["edited_rows"] = {}
 
 
 def component_club_players(players_df: pd.DataFrame):
@@ -32,8 +42,23 @@ def component_club_players(players_df: pd.DataFrame):
     """
     if "selected_player" not in st.session_state:
         st.session_state["selected_player"] = None
-    st.data_editor(
-        players_df, key="players_element", use_container_width=True,
+
+    # Workaround to get the selected player and reset the Details column to
+    # False. We recreate the component with a different key.
+    if "players_element" not in st.session_state \
+        and "players_element_edited" not in st.session_state:
+        data_editor_key = "players_element"
+    elif "players_element" in st.session_state \
+        and "players_element_edited" not in st.session_state:
+        data_editor_key = "players_element_edited"
+    elif "players_element" not in st.session_state \
+        and "players_element_edited" in st.session_state:
+        data_editor_key = "players_element"
+
+    st.session_state["data_editor_key"] = data_editor_key
+
+    players_df_edited = st.data_editor(
+        players_df, key=data_editor_key, use_container_width=True,
         hide_index=True,
         on_change=update_edited_rows,
         column_config={
@@ -107,20 +132,25 @@ def component_selected_player(players_df: pd.DataFrame):
                 f"<div style='width: 50%;'>"
                     f"<img src='data:image/png;base64,{radar_chart_url}' "
                     f"style='width: 100%;'>"
-                f"<p style='text-align: center;  font-weight: bold;'> Position </p>"
-                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"""<p style='text-align: center; font-weight: bold;'> Position
+                    </p>"""
+                f"<h3 style='text-align: center; font-weight: bold;'>"
                 f"{player.proPos}</h3>"
-                f"<p style='text-align: center;  font-weight: bold;'> Number </p>"
-                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"""<p style='text-align: center; font-weight: bold;'> Number
+                    </p>"""
+                f"<h3 style='text-align: center; font-weight: bold;'>"
                 f"{player.number}</h3>"
-                f"<p style='text-align: center;  font-weight: bold;'> Height </p>"
-                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"""<p style='text-align: center; font-weight: bold;'> Height
+                    </p>"""
+                f"<h3 style='text-align: center; font-weight: bold;'>"
                 f"{player.proHeight} cm</h3>"
-                f"<p style='text-align: center;  font-weight: bold;'> Weight </p>"
-                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"""<p style='text-align: center; font-weight: bold;'> Weight
+                    </p>"""
+                f"<h3 style='text-align: center; font-weight: bold;'>"
                 f"{player.weight} kg</h3>"
-                f"<p style='text-align: center;  font-weight: bold;'> Birthdate </p>"
-                f"<h3 style='text-align: center;  font-weight: bold;'>"
+                f"""<p style='text-align: center; font-weight: bold;'>
+                    Birthdate </p>"""
+                f"<h3 style='text-align: center; font-weight: bold;'>"
                 f"{player.birthdate}</h3>"
                 f"</div>"
         , unsafe_allow_html=True)
@@ -129,43 +159,47 @@ def component_selected_player(players_df: pd.DataFrame):
         # games, win%, MOTM. The second one has the goals, assists and overall.
         # The third one has the passes, passes% and shot%. The fourth one has
         # the tackles, tackles% and red cards.
+        # Only show if the player has the information available.
+        if player.gamesPlayed is not None and not np.isnan(player.gamesPlayed):
 
-        stats_list = [player.gamesPlayed, player.winRate, player.manOfTheMatch,
-                      player.goals, player.assists, player.proOverall,
-                      player.passesMade, player.passSuccessRate,
-                      player.shotSuccessRate, player.tacklesMade,
-                      player.tackleSuccessRate, player.redCards]
+            stats_list = [
+                player.gamesPlayed, player.winRate, player.manOfTheMatch,
+                player.goals, player.assists, player.proOverall,
+                player.passesMade, player.passSuccessRate,
+                player.shotSuccessRate, player.tacklesMade,
+                player.tackleSuccessRate, player.redCards]
 
-        stats_names = ["Games", "Win %", "MOTM", "Goals", "Assists", "Overall",
-                    "Passes", "Passes %", "Shot %", "Tackles", "Tackles %",
-                    "Red Cards"]
+            stats_names = [
+                "Games", "Win %", "MOTM", "Goals", "Assists", "Overall",
+                "Passes", "Passes %", "Shot %", "Tackles", "Tackles %",
+                "Red Cards"]
 
-        base_html = "<div style='display: flex; width: 100%;'>"
-        for i in range(0, 4):
-            stats_column = stats_list[i*3:(i+1)*3]
-            stats_names_column = stats_names[i*3:(i+1)*3]
-            base_html += \
-                f"""
-                <div style='width: 25%;'>
-                    <p style='text-align: center; font-weight: bold;'>
-                        {stats_names_column[0]}</p>
-                    <h3 style='text-align: center; font-weight: bold;'>
-                        {stats_column[0]}</h3>
-                    <p style='text-align: center; font-weight: bold;'>
-                        {stats_names_column[1]}</p>
-                    <h3 style='text-align: center; font-weight: bold;'>
-                        {stats_column[1]}</h3>
-                    <p style='text-align: center; font-weight: bold;'>
-                        {stats_names_column[2]}</p>
-                    <h3 style='text-align: center; font-weight: bold;'>
-                        {stats_column[2]}</h3>
-                </div>
-                """
+            base_html = "<div style='display: flex; width: 100%;'>"
+            for i in range(0, 4):
+                stats_column = stats_list[i*3:(i+1)*3]
+                stats_names_column = stats_names[i*3:(i+1)*3]
+                base_html += \
+                    f"""
+                    <div style='width: 25%;'>
+                        <p style='text-align: center; font-weight: bold;'>
+                            {stats_names_column[0]}</p>
+                        <h3 style='text-align: center; font-weight: bold;'>
+                            {stats_column[0]}</h3>
+                        <p style='text-align: center; font-weight: bold;'>
+                            {stats_names_column[1]}</p>
+                        <h3 style='text-align: center; font-weight: bold;'>
+                            {stats_column[1]}</h3>
+                        <p style='text-align: center; font-weight: bold;'>
+                            {stats_names_column[2]}</p>
+                        <h3 style='text-align: center; font-weight: bold;'>
+                            {stats_column[2]}</h3>
+                    </div>
+                    """
 
-        base_html += "</div>"
-        # Remove empty lines from the HTML
-        base_html = base_html.replace("\n", "")
-        st.markdown(base_html, unsafe_allow_html=True)
+            base_html += "</div>"
+            # Remove empty lines from the HTML
+            base_html = base_html.replace("\n", "")
+            st.markdown(base_html, unsafe_allow_html=True)
 
 
 def component_radial_chart(player: player_info.Player,
