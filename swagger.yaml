@@ -1,0 +1,798 @@
+openapi: 3.0.0
+servers:
+  - description: FIFA Pro Clubs API
+    url: https://proclubs.ea.com/api/fifa/
+info:
+  version: "1.0.0"
+  title: FIFA Pro Clubs API
+  description: The API for the Pro Clubs matches and teams
+paths:
+  /seasonRankLeaderboard:
+    get:
+      tags:
+        - Season Leaderboard
+      description: Returns the best teams in current season
+      operationId: getSeasonLeaderboard
+      parameters:
+      - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/userAgent'
+      - $ref: '#/components/parameters/referer'
+      responses:
+        '200':
+          description: The best 100 teams from the platform in current season
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/teamInRank"
+
+  /clubRankLeaderboard:
+    get:
+      tags: 
+      - Clubs Leaderboard
+      description: Returns the best teams from all time
+      operationId: getClubRankLeaderBoard
+      parameters:
+      - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/userAgent'
+      - $ref: '#/components/parameters/referer'
+      responses:
+        '200':
+          description: The best 100 teams from all time in that platform
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/teamInRank"
+
+  /clubs/info:
+    get:
+      tags:
+      - Club
+      description: Get club information, such as it's name and colors
+      operationId: getClubInfo
+      parameters:
+      - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/clubIds'
+      - $ref: '#/components/parameters/userAgent'
+      - $ref: '#/components/parameters/referer'
+      responses:
+        '200':
+          description: Club information
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/clubInfoNested'
+
+  /clubs/SeasonalStats:
+    get:
+      tags:
+      - Club
+      description: Get club history
+      operationId: getClubSeasonalStats
+      parameters:
+      - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/clubIds'
+      - $ref: '#/components/parameters/userAgent'
+      - $ref: '#/components/parameters/referer'
+      responses:
+        '200':
+          description: Club history (wins, losses)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/seasonalStats'
+                  
+
+  /members/stats:
+    get:
+      tags: 
+      - Members
+      description: Stats for every player in a club.
+      operationId: getMembersStats
+      parameters:
+      - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/clubId'
+      - $ref: '#/components/parameters/userAgent'
+      - $ref: '#/components/parameters/referer'
+      responses:
+        '200':
+          description: Members stats in the club. Also returns the amount of player in every position
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/membersStats'
+
+  /members/carrer/stats:
+    get:
+      tags:
+      - Members
+      description: Get the player information from all time
+      operationId: getMembersCareerStats
+      parameters:
+      - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/clubId'
+      - $ref: '#/components/parameters/userAgent'
+      - $ref: '#/components/parameters/referer'
+      responses:
+        '200':
+          description: Members all time stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/membersCareerStats'
+
+  /clubs/matches:
+    get:
+      tags:
+      - Matches
+      description: Get last matches from a given club
+      operationId: getMatches
+      parameters:
+      - $ref: '#/components/parameters/platform'
+      - $ref: '#/components/parameters/clubId'
+      - $ref: '#/components/parameters/matchType'
+      - $ref: '#/components/parameters/userAgent'
+      - $ref: '#/components/parameters/referer'
+      responses:
+        '200':
+          description: Matches information and players involved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/match'
+
+components:
+  schemas:
+    customKit:
+      type: object
+      properties:
+        stadName:
+          type: string
+        kitId:
+          type: string
+        isCustomTeam:
+          type: string
+        customKitId:
+          type: string
+        customAwayKitId:
+          type: string
+        customKeeperKitId:
+          type: string
+        kitColor1:
+          type: string
+        kitColor2:
+          type: string
+        kitColor3:
+          type: string
+        kitColor4:
+          type: string
+        kitAColor1:
+          type: string
+        kitAColor2:
+          type: string
+        kitAColor3:
+          type: string
+        kitAColor4:
+          type: string
+        dCustomKit:
+          type: string
+        crestColor:
+          type: string
+        crestAssetId:
+          type: string
+
+    clubInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        clubId:
+          type: string
+        regionId:
+          type: string
+        teamId:
+          type: string
+        customKit:
+          $ref: '#/components/schemas/customKit'
+        
+    clubInfoNested:
+      type: object
+      properties:
+        clubId:
+          $ref: '#/components/schemas/clubInfo'
+
+    teamInRank:
+      type: object
+      properties:
+        clubInfo:
+          $ref: '#/components/schemas/clubInfo'
+        rank:
+          type: string
+        seasons:
+          type: string
+        titlesWon:
+          type: string
+        leaguesWon:
+          type: string
+        divsWon1:
+          type: string
+        divsWon2:
+          type: string
+        divsWon3:
+          type: string
+        cupsWon6:
+          type: string
+        cupsWon5:
+          type: string
+        cupsWon4:
+          type: string
+        cupsWon3:
+          type: string
+        cupsWon2:
+          type: string
+        cupsWon1:
+          type: string
+        cupsWon0:
+          type: string
+        totalCupsWon:
+          type: string
+        cupsEntered:
+          type: string
+        cupWinPercent:
+          type: string
+        promotions:
+          type: string
+        relegations:
+          type: string
+        wins:
+          type: string
+        ties:
+          type: string
+        losses:
+          type: string
+        maxDivision:
+          type: string
+        goals:
+          type: string
+        goalsAgainst:
+          type: string
+        averageGoalsPerGame:
+          type: string
+        averageGoalsAgainstPerGame:
+          type: string
+        cleanSheets:
+          type: string
+        starLevel:
+          type: string
+        agreggateRecord:
+          type: string
+        clubName:
+          type: string
+        clubId:
+          type: string
+        currentDivision:
+          type: string
+        rankingPoints:
+          type: string
+        platform:
+          type: string
+
+    seasonalStats:
+      type: object
+      properties:
+        clubId:
+          type: string
+        seasons:
+          type: string
+        titlesWon:
+          type: string
+        leaguesWon:
+          type: string
+        divsWon1:
+          type: string
+        divsWon2:
+          type: string
+        divsWon3:
+          type: string
+        divsWon4:
+          type: string
+        cupsWon0:
+          type: string
+        cupsWon1:
+          type: string
+        cupsWon2:
+          type: string
+        cupsWon3:
+          type: string
+        cupsWon4:
+          type: string
+        cupsWon5:
+          type: string
+        cupsWon6:
+          type: string
+        cupsElim0:
+          type: string
+        cupsElim0R1:
+          type: string
+        cupsElim0R2:
+          type: string
+        cupsElim0R3:
+          type: string
+        cupsElim0R4:
+          type: string
+        cupsElim1:
+          type: string
+        cupsElim1R1:
+          type: string
+        cupsElim1R2:
+          type: string
+        cupsElim1R3:
+          type: string
+        cupsElim1R4:
+          type: string
+        cupsElim2:
+          type: string
+        cupsElim2R1:
+          type: string
+        cupsElim2R2:
+          type: string
+        cupsElim2R3:
+          type: string
+        cupsElim2R4:
+          type: string
+        cupsElim3:
+          type: string
+        cupsElim3R1:
+          type: string
+        cupsElim3R2:
+          type: string
+        cupsElim3R3:
+          type: string
+        cupsElim3R4:
+          type: string
+        cupsElim4:
+          type: string
+        cupsElim4R1:
+          type: string
+        cupsElim4R2:
+          type: string
+        cupsElim4R3:
+          type: string
+        cupsElim4R4:
+          type: string
+        cupsElim5:
+          type: string
+        cupsElim5R1:
+          type: string
+        cupsElim5R2:
+          type: string
+        cupsElim5R3:
+          type: string
+        cupsElim5R4:
+          type: string
+        cupsElim6:
+          type: string
+        cupsElim6R1:
+          type: string
+        cupsElim6R2:
+          type: string
+        cupsElim6R3:
+          type: string
+        cupsElim6R4:
+          type: string
+        promotions:
+          type: string
+        holds:
+          type: string
+        relegations:
+          type: string
+        rankingPoints:
+          type: string
+        prevDivision:
+          type: string
+        maxDivision:
+          type: string
+        bestDivision:
+          type: string
+        bestPoints:
+          type: string
+        curSeasonMov:
+          type: string
+        lastMatch0:
+          type: string
+        lastMatch1:
+          type: string
+        lastMatch2:
+          type: string
+        lastMatch3:
+          type: string
+        lastMatch4:
+          type: string
+        lastMatch5:
+          type: string
+        lastMatch6:
+          type: string
+        lastMatch7:
+          type: string
+        lastMatch8:
+          type: string
+        lastMatch9:
+          type: string
+        lastOpponent0:
+          type: string
+        lastOpponent1:
+          type: string
+        lastOpponent2:
+          type: string
+        lastOpponent3:
+          type: string
+        lastOpponent4:
+          type: string
+        lastOpponent5:
+          type: string
+        lastOpponent6:
+          type: string
+        lastOpponent7:
+          type: string
+        lastOpponent8:
+          type: string
+        lastOpponent9:
+          type: string
+        starLevel:
+          type: string
+        cupRankingPoints:
+          type: string
+        overallRankingPoints:
+          type: string
+        alltimeGoals:
+          type: string
+        alltimeGoalsAgainst:
+          type: string
+        seasonWins:
+          type: string
+        seasonTies:
+          type: string
+        seasonLosses:
+          type: string
+        gamesPlayed:
+          type: string
+        goals:
+          type: string
+        goalsAgainst:
+          type: string
+        points:
+          type: string
+        prevSeasonWins:
+          type: string
+        prevSeasonTies:
+          type: string
+        prevSeasonLosses:
+          type: string
+        prevPoints:
+          type: string
+        prevProjectedPts:
+          type: string
+        skill:
+          type: string
+        wins:
+          type: string
+        ties:
+          type: string
+        losses:
+          type: string
+        currentDivision:
+          type: string
+        projectedPoints:
+          type: string
+        totalCupsWon:
+          type: string
+        recentResults:
+          type: array
+          items:
+            type: string
+        totalGames:
+          type: string
+
+    playerInClub:
+      type: object
+      properties:
+        name:
+          type: string
+        gamesPlayed:
+          type: string
+        winRate:
+          type: string
+        goals:
+          type: string
+        assists:
+          type: string
+        cleanSheetsDef:
+          type: string
+        cleanSheetsGK:
+          type: string
+        shotSuccessRate:
+          type: string
+        passesMade:
+          type: string
+        passSuccessRate:
+          type: string
+        tacklesMade:
+          type: string
+        tackleSuccessRate:
+          type: string
+        proName:
+          type: string
+        proPos:
+          type: string
+        proStyle:
+          type: string
+        proHeight:
+          type: string
+        proNationality:
+          type: string
+        proOverall:
+          type: string
+        manOfTheMatch:
+          type: string
+        redCards:
+          type: string
+        prevGoals:
+          type: string
+        favoritePosition:
+          type: string
+
+    playerCareer:
+      type: object
+      properties:
+        name:
+          type: string
+        proPos:
+          type: string
+        gamesPlayed:
+          type: string
+        goals:
+          type: string
+        assists:
+          type: string
+        manOfTheMatch:
+          type: string
+        ratingAve:
+          type: string
+        favoritePosition:
+          type: string
+
+    positionCount:
+      type: object
+      properties:
+        midfielder:
+          type: string
+        goalkeeper:
+          type: string
+        forward:
+          type: string
+        defender:
+          type: string
+
+    membersStats:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/playerInClub'
+        positionCount:
+          $ref: '#/components/schemas/positionCount'
+
+    membersCareerStats:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/playerCareer'
+        positionCount:
+          $ref: '#/components/schemas/positionCount'
+
+    playerInMatch:
+      type: object
+      properties:
+        player_id:
+          type: object
+          properties:
+            assists:
+              type: string
+            cleansheetsany:
+              type: string
+            cleansheetsdef:
+              type: string
+            cleansheetsgk:
+              type: string
+            goals:
+              type: string
+            goalsconceded:
+              type: string
+            losses:
+              type: string
+            mom:
+              type: string
+            namespace:
+              type: string
+            passattempts:
+              type: string
+            passesmade:
+              type: string
+            pos:
+              type: string
+            rating:
+              type: string
+            realtimegame:
+              type: string
+            realtimeidle:
+              type: string
+            redcards:
+              type: string
+            saves:
+              type: string
+            SCORE:
+              type: string
+            shots:
+              type: string
+            tackleattempts:
+              type: string
+            tacklesmade:
+              type: string
+            vproattr:
+              type: string
+            vprohackreason:
+              type: string
+            wins:
+              type: string
+            playername:
+              type: string
+
+    aggregatedTeamStatsInMatch:
+      type: object
+      properties:
+        clubId:
+          type: object
+          properties:
+            assists:
+              type: string
+            cleansheetsany:
+              type: string
+            cleansheetsdef:
+              type: string
+            cleansheetsgk:
+              type: string
+            goals:
+              type: string
+            goalsconceded:
+              type: string
+            losses:
+              type: string
+            mom:
+              type: string
+            namespace:
+              type: string
+            passattempts:
+              type: string
+            passesmade:
+              type: string
+            pos:
+              type: string
+            rating:
+              type: string
+            realtimegame:
+              type: string
+            realtimeidle:
+              type: string
+            redcards:
+              type: string
+            saves:
+              type: string
+            SCORE:
+              type: string
+            shots:
+              type: string
+            tackleattempts:
+              type: string
+            tacklesmade:
+              type: string
+            vproattr:
+              type: string
+            vprohackreason:
+              type: string
+            wins:
+              type: string
+
+    match:
+      type: object
+      properties:
+        matchId:
+          type: string
+        timestamp:
+          type: string
+        timeAgo:
+          type: object
+          properties:
+            number:
+              type: string
+            unit:
+              type: string
+        clubs:
+          type: object
+          properties:
+            homeClubId:
+              $ref: '#/components/schemas/clubInfoNested'
+            awayClubId:
+              $ref: '#/components/schemas/clubInfoNested'
+        players:
+          type: object
+          properties:
+            homeClubId:
+              type: object
+              items:
+                $ref: '#/components/schemas/playerInMatch'
+            awayClubId:
+              type: object
+              items:
+                $ref: '#/components/schemas/playerInMatch'
+        aggregate:
+          type: object
+          properties:
+            homeClubId:
+              $ref: '#/components/schemas/aggregatedTeamStatsInMatch'
+            awayClubId:
+              $ref: '#/components/schemas/aggregatedTeamStatsInMatch'
+
+  parameters:
+    platform:
+      name: platform
+      in: query
+      description: Which platform the rank is from (ps5, pc, xbox-series-xs, ps4, xboxone)
+      schema:
+        type: string
+        example: ps5
+  
+    clubIds:
+      name: clubIds
+      in: query
+      description: The club ID
+      schema:
+        type: string
+        example: 18353
+  
+    clubId:
+      name: clubId
+      in: query
+      description: The club ID
+      schema:
+        type: string
+        example: 18353
+
+    matchType:
+      name: matchType
+      in: query
+      description: Type of matches to gather (9 for league, 13 for cups)
+      schema:
+        type: string
+        example: 9
+    
+    userAgent:
+      name: "User-Agent"
+      in: header
+      schema:
+        type: string
+        default: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36
+  
+    referer:
+      name: Referer
+      in: header
+      schema:
+        type: string
+        default: https://www.ea.com/
