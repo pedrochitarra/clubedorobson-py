@@ -21,6 +21,4 @@ matches_df = utils_match.get_season_matches_df(
     matches_ids_selected_season)
 
 components_match.component_season_matches(matches_df)
-if "keep_row" not in st.session_state:
-    st.session_state["keep_row"] = None
 components_match.component_selected_match(matches_df, matches_clubs)
