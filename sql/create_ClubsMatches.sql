@@ -1,7 +1,7 @@
-CREATE TABLE ClubesPartidas (
-    "clubMatchId" TEXT NOT NULL,
-    "clubId" INTEGER NOT NULL,
-    "matchId" TEXT NOT NULL,
+CREATE TABLE ClubsMatches (
+    clubMatchId TEXT NOT NULL,
+    clubId INTEGER NOT NULL,
+    matchId TEXT NOT NULL,
     passattempts INTEGER NOT NULL,
     passesmade INTEGER NOT NULL,
     rating TEXT NOT NULL,

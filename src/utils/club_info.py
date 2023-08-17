@@ -85,7 +85,7 @@ class Club:
         # name is not in the database, it's created by the club id so
         # that every club has a stadium image.
         stadium = cursor.execute(
-            f"SELECT * FROM Estadios WHERE name like '%{self.stadium_name}%'")
+            f"SELECT * FROM Stadiums WHERE name like '%{self.stadium_name}%'")
         stadium = stadium.fetchall()
 
         if len(stadium) != 0:
@@ -93,7 +93,7 @@ class Club:
             stadium = pd.DataFrame(stadium, columns=columns)
             stadium = stadium.iloc[0]
         else:
-            candidate_stadiums = cursor.execute("SELECT * FROM Estadios")
+            candidate_stadiums = cursor.execute("SELECT * FROM Stadiums")
             candidate_stadiums = candidate_stadiums.fetchall()
             columns = [description[0] for description in cursor.description]
             candidate_stadiums = pd.DataFrame(candidate_stadiums,
@@ -125,7 +125,7 @@ def get_club_info(club_id: int = 6703918):
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
     club = cursor.execute(
-        f"SELECT * FROM Clubes WHERE clubId = {club_id}")
+        f"SELECT * FROM Clubs WHERE clubId = {club_id}")
     club = club.fetchall()
     columns = [description[0] for description in cursor.description]
     cursor.close()
@@ -213,7 +213,7 @@ def get_all_clubs() -> pd.DataFrame:
     database_file = "data/raw/clubedorobson.db"
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
-    club = cursor.execute("SELECT * FROM Clubes")
+    club = cursor.execute("SELECT * FROM Clubs")
     club = club.fetchall()
     columns = [description[0] for description in cursor.description]
     clubs = pd.DataFrame(club, columns=columns)
@@ -234,7 +234,7 @@ def get_club_last_matches(club_id: int) -> pd.DataFrame:
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
     matches = cursor.execute(
-        f"""SELECT * FROM Partidas WHERE homeClub = {club_id}
+        f"""SELECT * FROM Matches WHERE homeClub = {club_id}
         OR awayClub = {club_id}
         ORDER BY matchId DESC
         LIMIT 10;""")

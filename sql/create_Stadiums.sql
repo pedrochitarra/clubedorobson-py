@@ -1,4 +1,4 @@
-CREATE TABLE Estadios (
+CREATE TABLE Stadiums (
     stadium_id INTEGER,
     name TEXT,
     home_team INTEGER,
