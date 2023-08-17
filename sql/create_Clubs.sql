@@ -1,10 +1,10 @@
-CREATE TABLE Clubes (
-    "clubId" INTEGER NOT NULL,
+CREATE TABLE Clubs (
+    clubId INTEGER NOT NULL,
     name TEXT NOT NULL,
-    "regionId" TEXT NOT NULL,
-    "teamId" TEXT NOT NULL,
-    "createdAt" TEXT NOT NULL,
-    "updatedAt" TEXT NOT NULL,
+    regionId TEXT NOT NULL,
+    teamId TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL,
     stadname TEXT,
     iscustomteam INTEGER,
     standardcrestid INTEGER,

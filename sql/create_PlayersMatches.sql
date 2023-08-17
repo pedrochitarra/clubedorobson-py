@@ -1,7 +1,7 @@
-CREATE TABLE JogadoresPartidas (
-    "memberMatchId" TEXT NOT NULL,
+CREATE TABLE PlayersMatches (
+    memberMatchId TEXT NOT NULL,
     name TEXT NOT NULL,
-    "matchId" TEXT NOT NULL,
+    matchId TEXT NOT NULL,
     passattempts TEXT NOT NULL,
     passesmade TEXT NOT NULL,
     rating TEXT NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE JogadoresPartidas (
     tacklesmade TEXT NOT NULL,
     pos TEXT NOT NULL,
     vproattr TEXT NOT NULL,
-    "createdAt" TEXT NOT NULL,
-    "updatedAt" TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL,
     clubid INTEGER
 );

@@ -12,7 +12,7 @@ def get_seasons_list():
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
     # Get all matches from database
-    matches = cursor.execute("SELECT * FROM Partidas")
+    matches = cursor.execute("SELECT * FROM Matches")
     matches = matches.fetchall()
     columns = [description[0] for description in cursor.description]
     matches = pd.DataFrame(matches, columns=columns)
@@ -20,7 +20,7 @@ def get_seasons_list():
     matches.sort_values(by=["matchId"], inplace=True)
 
     # Get all matches that our team played
-    matches_clubs = cursor.execute("SELECT * FROM ClubesPartidas")
+    matches_clubs = cursor.execute("SELECT * FROM ClubsMatches")
     matches_clubs = matches_clubs.fetchall()
     columns = [description[0] for description in cursor.description]
     matches_clubs = pd.DataFrame(matches_clubs, columns=columns)
@@ -45,7 +45,7 @@ def get_matches():
     database_file = "data/raw/clubedorobson.db"
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
-    matches = cursor.execute("SELECT * FROM Partidas")
+    matches = cursor.execute("SELECT * FROM Matches")
     matches = matches.fetchall()
     columns = [description[0] for description in cursor.description]
     matches = pd.DataFrame(matches, columns=columns)
@@ -62,14 +62,14 @@ def get_matches_season(season: int):
     database_file = "data/raw/clubedorobson.db"
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
-    matches = cursor.execute("SELECT * FROM Partidas")
+    matches = cursor.execute("SELECT * FROM Matches")
     matches = matches.fetchall()
     columns = [description[0] for description in cursor.description]
     matches = pd.DataFrame(matches, columns=columns)
 
     matches.sort_values(by=["matchId"], inplace=True)
 
-    matches_clubs = cursor.execute("SELECT * FROM ClubesPartidas")
+    matches_clubs = cursor.execute("SELECT * FROM ClubsMatches")
     matches_clubs = matches_clubs.fetchall()
     columns = [description[0] for description in cursor.description]
     matches_clubs = pd.DataFrame(matches_clubs, columns=columns)
@@ -148,7 +148,7 @@ def get_players_in_match(match_id: int,
     database_file = "data/raw/clubedorobson.db"
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
-    players_match = cursor.execute(f"""SELECT * FROM JogadoresPartidas
+    players_match = cursor.execute(f"""SELECT * FROM PlayersMatches
                                    WHERE matchId = {match_id}""")
     players_match = players_match.fetchall()
     columns = [description[0] for description in cursor.description]

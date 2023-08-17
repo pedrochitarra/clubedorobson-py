@@ -22,6 +22,6 @@ CREATE TABLE Seasonals (
     currentdivision INTEGER,
     totalgames INTEGER,
     clubid INTEGER NOT NULL,
-    "createdAt" TEXT,
-    "updatedAt" TEXT
+    createdAt TEXT,
+    updatedAt TEXT
 );

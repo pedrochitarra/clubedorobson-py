@@ -17,7 +17,7 @@ def get_players_by_club(club_id: int):
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
     players = cursor.execute(
-        f"SELECT * FROM Jogadores WHERE clubId = {club_id}")
+        f"SELECT * FROM Players WHERE clubId = {club_id}")
     players = players.fetchall()
     columns = [description[0] for description in cursor.description]
     players = pd.DataFrame(players, columns=columns)
@@ -46,7 +46,7 @@ def get_player_vproattr(player_name: str):
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
     players = cursor.execute(
-        f"""SELECT * FROM JogadoresPartidas WHERE name = '{player_name}'
+        f"""SELECT * FROM PlayersMatches WHERE name = '{player_name}'
         ORDER BY matchId DESC LIMIT 1""")
     players = players.fetchall()
     columns = [description[0] for description in cursor.description]
@@ -64,7 +64,7 @@ def get_player_by_online_id(online_id: str) -> pd.DataFrame:
     connection = sqlite3.connect(database_file)
     cursor = connection.cursor()
     players = cursor.execute(
-        f"""SELECT * FROM Jogadores WHERE name = '{online_id}'""")
+        f"""SELECT * FROM Players WHERE name = '{online_id}'""")
     players = players.fetchall()
     columns = [description[0] for description in cursor.description]
     players = pd.DataFrame(players, columns=columns)

@@ -160,7 +160,9 @@ def component_selected_player(players_df: pd.DataFrame):
         # The third one has the passes, passes% and shot%. The fourth one has
         # the tackles, tackles% and red cards.
         # Only show if the player has the information available.
-        if player.gamesPlayed is not None and not np.isnan(player.gamesPlayed):
+        if player.gamesPlayed is not None and\
+            not (isinstance(player.gamesPlayed,
+                            (float, int)) and np.isnan(player.gamesPlayed)):
 
             stats_list = [
                 player.gamesPlayed, player.winRate, player.manOfTheMatch,
