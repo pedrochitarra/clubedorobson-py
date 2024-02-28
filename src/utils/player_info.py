@@ -146,9 +146,9 @@ def get_players_df(selected_club: int):
 
     # Convert the nationality to the flag path
     ea_root_folder = \
-        "https://www.ea.com/fifa/ultimate-team/web-app/content/"
-    flags_root_folder = "21D4F1AC-91A3-458D-A64E-895AA6D871D1/2021/"
-    fut_root_folder = "fut/items/images/mobile/flags/card/"
+        "https://www.ea.com/ea-sports-fc/ultimate-team/web-app/content/"
+    flags_root_folder = "24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/"
+    fut_root_folder = "fut/items/images/mobile/flags/list/"
     flag_path = ea_root_folder + flags_root_folder + fut_root_folder
 
     players_df["proNationality"] = players_df["proNationality"].apply(

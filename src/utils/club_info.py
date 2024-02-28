@@ -54,10 +54,10 @@ class Club:
         """Get the home and away kit image paths from the club's standard crest
         ID. The standard crest ID is used to get the image paths from the FIFA
         21 database."""
-        root_folder = 'https://www.ea.com/fifa/ultimate-team/web-app/content/'
-        mobile_folder = '21D4F1AC-91A3-458D-A64E-895AA6D871D1/2021/fut/items'
-        home_kit_folder = '/images/mobile/kits/home/'
-        away_kit_folder = '/images/mobile/kits/away/'
+        root_folder = 'https://www.ea.com/ea-sports-fc/ultimate-team/web-app/'
+        mobile_folder = 'content/24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/'
+        home_kit_folder = 'fut/items/images/mobile/kits/home/'
+        away_kit_folder = 'fut/items/images/mobile/kits/away/'
         self.home_kit_path = root_folder + mobile_folder + home_kit_folder + \
             f'j0_{self.standard_crest_id}_0.png'
         self.away_kit_path = root_folder + mobile_folder + away_kit_folder + \
@@ -66,12 +66,14 @@ class Club:
     def __get_stadium_url(self):
         """Get the stadium image path from the club's stadium ID. The stadium
         ID is used to get the image path from the FIFA 21 database."""
-        root_folder = 'https://www.ea.com/fifa/ultimate-team/web-app/content/'
-        mobile_folder = '21D4F1AC-91A3-458D-A64E-895AA6D871D1/2021/fut/items'
-        stadium_folder = '/images/mobile/vanity/stadium/'
+        root_folder = 'https://www.ea.com/ea-sports-fc/ultimate-team/web-app/'
+        mobile_folder = 'content/24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/'
+        stadium_folder = 'fut/items/images/mobile/vanity/stadium/'
         stadium_path = f'{self.stadium_id}.png'
         self.stadium_path = root_folder + mobile_folder + stadium_folder + \
             stadium_path
+
+        # https://www.ea.com/ea-sports-fc/ultimate-team/web-app/content/24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/fut/items/images/mobile/vanity/stadium/14.png
 
     def __get_stadium(self):
         """Get the stadium name and capacity from the club's stadium name. The
