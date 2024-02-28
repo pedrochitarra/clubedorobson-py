@@ -2,6 +2,8 @@
 import requests
 import sqlite3
 import json
+import time
+from tqdm import tqdm
 
 
 HEADERS = {
@@ -210,12 +212,35 @@ def update_seasonals(club_id: int):
     cursor.close()
 
 
+def update_other_clubs():
+    """Get the data of other clubs that played against us from the API and
+    insert it into the database. We get the IDs from the ClubsMatches table.
+    """
+    connection = sqlite3.connect(DATABASE_FILE)
+    cursor = connection.cursor()
+    cursor.execute("""SELECT DISTINCT clubId FROM ClubsMatches
+                   WHERE clubId != 2654598""")
+    other_clubs = cursor.fetchall()
+    cursor.close()
+
+    for club in tqdm(other_clubs):
+        # time.sleep(0.2)
+        update_club(club[0])
+        # time.sleep(0.2)
+        update_seasonals(club[0])
+        # time.sleep(0.2)
+        update_players(club[0])
+        # time.sleep(0.2)
+        update_matches(club[0])
+
+
 def main():
     """Update the database with the data of our club from the API."""
     update_club(2654598)
     update_players(2654598)
     update_matches(2654598)
     update_seasonals(2654598)
+    # update_other_clubs()
 
 
 if __name__ == "__main__":
