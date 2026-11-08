@@ -148,7 +148,10 @@ def detalhe(tag: str):
                 f'<div class="attr"><span>{rot}</span><div class="bar"><div style="width:{s[k]}%;background:{ui.attr_color(s[k])}"></div></div>'
                 f'<b style="color:{ui.attr_color(s[k])}">{s[k]}</b></div>' for rot, k in itens)
             blocos.append(f'<div class="card"><div class="card-h">{titulo} <span style="float:right;color:{ui.attr_color(g[sigla])}">{g[sigla]}</span></div>{linhas}</div>')
-        st.html(f'<div class="cdr-grid g3" style="margin-top:20px">{"".join(blocos)}</div>')
+        rotulos = {"RIT": "Ritmo", "FIN": "Finalização", "PAS": "Passe", "CON": "Condução", "DEF": "Defesa", "FIS": "Físico"}
+        hexagono = ui.radar({rotulos[k]: v for k, v in g.items()})
+        st.html(f'<div class="habilidades"><div class="card radar-card"><div class="card-h">Habilidades</div>{hexagono}</div>'
+                f'<div class="grupos">{"".join(blocos)}</div></div>')
 
 
 tag = st.query_params.get("jogador")

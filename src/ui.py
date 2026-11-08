@@ -1,5 +1,7 @@
 """Visual compartilhado: CSS (mesmo tema da versão Vue) e helpers de HTML/imagens."""
+import base64
 import json
+import math
 from pathlib import Path
 
 import streamlit as st
@@ -121,6 +123,11 @@ a.card:hover { transform: translateY(-2px); border-color: rgba(167,123,240,.5); 
 .cdr-grid.carreira { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .cdr-grid.fatos .card, .cdr-grid.carreira .card { padding: 14px 16px; min-width: 0; }
 @media (max-width: 700px) { .cdr-grid.carreira { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.habilidades { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 14px; margin-top: 20px; align-items: start; }
+.habilidades .grupos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.radar-card { position: sticky; top: 70px; text-align: center; }
+@media (max-width: 860px) { .habilidades { grid-template-columns: 1fr; } .radar-card { position: static; } }
+@media (max-width: 560px) { .habilidades .grupos { grid-template-columns: 1fr; } }
 .tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 8px 0 18px; }
 .shirt { display: inline-grid; place-items: center; min-width: 52px; height: 52px; padding: 0 8px; border-radius: 12px 12px 18px 18px;
          background: linear-gradient(180deg, #ff4fa0, #d81b72); color: #fff; font-family: var(--display); font-weight: 800; font-size: 1.7rem;
@@ -205,6 +212,42 @@ DEFAULT_PHOTO = "app/static/players/_default.png"
 
 def attr_color(v: float) -> str:
     return "var(--win)" if v >= 85 else "var(--gold)" if v >= 70 else "#f59f4a" if v >= 50 else "var(--loss)"
+
+
+def _cor_literal(v: float) -> str:
+    return "#3ecf8e" if v >= 85 else "#f5c518" if v >= 70 else "#f59f4a" if v >= 50 else "#ef5d6b"
+
+
+def radar(valores: dict, tamanho: int = 300) -> str:
+    """Hexágono de habilidades: um eixo por atributo (0–99), grade em 25/50/75/99.
+    Vai como <img> com SVG em base64, porque o st.html remove <svg> embutido; por isso as cores são literais."""
+    nomes = list(valores)
+    c, r = tamanho / 2, tamanho / 2 - 46
+    ang = [-math.pi / 2 + i * 2 * math.pi / len(nomes) for i in range(len(nomes))]
+
+    def ponto(a, f):
+        return c + r * f * math.cos(a), c + r * f * math.sin(a)
+
+    def poly(fs):
+        return " ".join(f"{x:.1f},{y:.1f}" for x, y in (ponto(a, f) for a, f in zip(ang, fs)))
+
+    grade = "".join(f'<polygon points="{poly([f] * len(nomes))}" fill="none" stroke="rgba(255,255,255,{.06 + .04 * i:.2f})"/>'
+                    for i, f in enumerate((.25, .5, .75, 1)))
+    eixos = "".join(f'<line x1="{c}" y1="{c}" x2="{ponto(a, 1)[0]:.1f}" y2="{ponto(a, 1)[1]:.1f}" stroke="rgba(255,255,255,.08)"/>' for a in ang)
+    fs = [valores[n] / 99 for n in nomes]
+    pontos = "".join(f'<circle cx="{ponto(a, f)[0]:.1f}" cy="{ponto(a, f)[1]:.1f}" r="3.5" fill="#f5c518"/>' for a, f in zip(ang, fs))
+    rotulos = ""
+    for a, n in zip(ang, nomes):
+        x, y = ponto(a, 1.25)
+        rotulos += (f'<text x="{x:.1f}" y="{y - 5:.1f}" text-anchor="middle" fill="#a99cc0" '
+                    f'font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="13">{n}</text>'
+                    f'<text x="{x:.1f}" y="{y + 13:.1f}" text-anchor="middle" fill="{_cor_literal(valores[n])}" '
+                    f'font-family="Barlow Condensed, sans-serif" font-weight="800" font-size="19">{valores[n]}</text>')
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {tamanho} {tamanho}">{grade}{eixos}'
+           f'<polygon points="{poly(fs)}" fill="rgba(245,197,24,.22)" stroke="#f5c518" stroke-width="2" stroke-linejoin="round"/>'
+           f'{pontos}{rotulos}</svg>')
+    src = "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode()
+    return f'<img src="{src}" alt="Hexágono de habilidades" style="width:100%;max-width:{tamanho}px;display:block;margin:auto">'
 
 
 def fmt_int(v) -> str:
