@@ -1,0 +1,14 @@
+[theme]
+base = "dark"
+primaryColor = "#f5c518"
+backgroundColor = "#120c1c"
+secondaryBackgroundColor = "#1c1329"
+textColor = "#f3eefb"
+font = "sans serif"
+
+[server]
+# Serve static/ em /app/static/ (escudos, fotos e troféus usados no HTML das páginas)
+enableStaticServing = true
+
+[client]
+toolbarMode = "minimal"

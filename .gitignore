@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Estado local do scanner (get_team.py)
+teams/
+last_id.txt

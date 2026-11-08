@@ -1,3 +1,4 @@
-streamlit
-plotly
-kaleido
+streamlit>=1.46
+pandas
+requests>=2.31
+tqdm
