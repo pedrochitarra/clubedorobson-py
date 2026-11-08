@@ -59,6 +59,12 @@ INDEX = """<!doctype html>
     import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@__STLITE__/build/stlite.js";
     // Base do site (ex.: /clubedorobson-py/), para baixar os arquivos de qualquer rota
     const base = new URL(document.querySelector('link[rel=icon]').href, location.href).pathname.replace(/app\\/static\\/crests\\/99150901\\.png$/, '');
+    // Rota no caminho (/base/jogadores?x=1) vira ?pagina=jogadores&x=1 na raiz; o app.py abre a página certa
+    const rota = location.pathname.slice(base.length).replace(/\\/$/, '');
+    if (rota && rota !== 'index.html' && rota !== '404.html') {
+      const q = new URLSearchParams(location.search); q.set('pagina', rota);
+      history.replaceState(null, '', base + '?' + q.toString() + location.hash);
+    }
     const arquivos = __ARQUIVOS__;
     const files = Object.fromEntries(arquivos.map((f) => [f, { url: base + f }]));
     mount({
