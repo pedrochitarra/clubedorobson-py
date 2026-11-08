@@ -7,6 +7,7 @@
 
 Uso: python scripts/build_pages.py   (depois: python -m http.server -d _site)
 """
+import hashlib
 import json
 import shutil
 from pathlib import Path
@@ -66,7 +67,8 @@ INDEX = """<!doctype html>
       history.replaceState(null, '', base + '?' + q.toString() + location.hash);
     }
     const arquivos = __ARQUIVOS__;
-    const files = Object.fromEntries(arquivos.map((f) => [f, { url: base + f }]));
+    // ?v=<hash do conteúdo>: o Pages manda guardar por 10 min; sem isso o navegador usaria a versão anterior
+    const files = Object.fromEntries(Object.entries(arquivos).map(([f, v]) => [f, { url: base + f + '?v=' + v }]));
     mount({
       requirements: ["pandas"],
       entrypoint: "app.py",
@@ -93,7 +95,7 @@ def main():
         shutil.copy2(ROOT / f, SITE / f)
     shutil.copytree(ROOT / "static", SITE / "app" / "static")
     html = (INDEX.replace("__STLITE__", STLITE)
-            .replace("__ARQUIVOS__", json.dumps(ARQUIVOS))
+            .replace("__ARQUIVOS__", json.dumps({f: hashlib.sha1((ROOT / f).read_bytes()).hexdigest()[:10] for f in ARQUIVOS}))
             .replace("__CONFIG__", json.dumps(CONFIG)))
     (SITE / "index.html").write_text(html, encoding="utf-8")
     (SITE / "404.html").write_text(html, encoding="utf-8")
