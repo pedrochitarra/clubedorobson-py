@@ -142,6 +142,9 @@ def detalhe(tag: str):
                                ("Interceptação", "interceptacao"), ("Cabeceio", "cabeceio"), ("Carrinho", "carrinho")]),
             ("Físico", "FIS", [("Força", "forca"), ("Fôlego", "folego"), ("Combatividade", "combatividade"), ("Impulsão", "impulsao")]),
         ]
+        # Ordem pensada para as duas colunas do mural terem alturas parecidas
+        ordem = ["Finalização", "Condução", "Ritmo", "Passe", "Defesa", "Físico"]
+        grupos.sort(key=lambda gr: ordem.index(gr[0]))
         blocos = []
         for titulo, sigla, itens in grupos:
             linhas = "".join(

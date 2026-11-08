@@ -124,10 +124,11 @@ a.card:hover { transform: translateY(-2px); border-color: rgba(167,123,240,.5); 
 .cdr-grid.fatos .card, .cdr-grid.carreira .card { padding: 14px 16px; min-width: 0; }
 @media (max-width: 700px) { .cdr-grid.carreira { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .habilidades { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 14px; margin-top: 20px; align-items: start; }
-.habilidades .grupos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.habilidades .grupos { columns: 2; column-gap: 14px; }
+.habilidades .grupos .card { break-inside: avoid; margin-bottom: 14px; display: block; }
 .radar-card { position: sticky; top: 70px; text-align: center; }
 @media (max-width: 860px) { .habilidades { grid-template-columns: 1fr; } .radar-card { position: static; } }
-@media (max-width: 560px) { .habilidades .grupos { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .habilidades .grupos { columns: 1; } }
 .tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 8px 0 18px; }
 .shirt { display: inline-grid; place-items: center; min-width: 52px; height: 52px; padding: 0 8px; border-radius: 12px 12px 18px 18px;
          background: linear-gradient(180deg, #ff4fa0, #d81b72); color: #fff; font-family: var(--display); font-weight: 800; font-size: 1.7rem;
