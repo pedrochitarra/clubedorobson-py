@@ -19,13 +19,12 @@ def lista():
     rob = data.robsoners()
     st.html('<p class="cdr-title">Elenco</p><p class="cdr-sub">Quem vestiu a camisa do Robson, por número de jogos</p>')
 
-    cards = []
-    for _, m in membros.iterrows():
+    for col, (_, m) in zip(st.columns(2) * len(membros), membros.iterrows()):
         foto = ui.photo(m["name"])
         img = f'<img src="{foto}">' if foto else f'<img class="ph-empty" src="{ui.DEFAULT_PHOTO}">'
         num = f'<span class="num">{int(m["number"])}</span>' if pd.notna(m["number"]) else ""
-        cards.append(f"""
-<a class="card player" href="jogadores?jogador={m['name']}" target="_self">
+        html = f"""
+<div class="card player">
   <div class="ph">{img}{num}</div>
   <div style="flex:1;min-width:0">
     <div style="display:flex;justify-content:space-between;gap:8px">
@@ -39,19 +38,21 @@ def lista():
     <div class="bar" style="height:6px"><div style="width:{m['winRate']}%;background:var(--win)"></div></div>
     <div class="tag" style="margin-top:4px">{m['winRate']:.0f}% de vitórias</div>
   </div>
-</a>""")
-    st.html(f'<div class="cdr-grid g2">{"".join(cards)}</div>')
+</div>"""
+        with col:
+            ui.link(f"jog_{m['name']}", html, jogador=m["name"])
 
     fakes = rob[rob["isfake"] == 1].sort_values("number")
-    legends = "".join(
-        f'<a class="card legend" href="jogadores?jogador={r["name"]}" target="_self">'
-        f'<img src="{ui.photo(r["name"]) or ui.DEFAULT_PHOTO}">'
-        f'<div class="big gold" style="font-size:1.4rem;margin-top:6px">{r["number"]}</div>'
-        f'<div style="font-weight:600">{r["proName"]}</div></a>'
-        for _, r in fakes.iterrows())
     st.html('<div class="cdr-section">Personagens do clube</div>'
-            '<p class="cdr-sub">Os craques fictícios que completavam o time</p>'
-            f'<div class="cdr-grid g4">{legends}</div>')
+            '<p class="cdr-sub">Os craques fictícios que completavam o time</p>')
+    for col, (_, r) in zip(st.columns(4) * len(fakes), fakes.iterrows()):
+        with col:
+            ui.link(
+                f"leg_{r['name']}",
+                f'<div class="card legend"><img src="{ui.photo(r["name"]) or ui.DEFAULT_PHOTO}">'
+                f'<div class="big gold" style="font-size:1.4rem;margin-top:6px">{r["number"]}</div>'
+                f'<div style="font-weight:600">{r["proName"]}</div></div>',
+                jogador=r["name"])
 
 
 def detalhe(tag: str):
@@ -71,7 +72,7 @@ def detalhe(tag: str):
 
     nome = r["proName"] if r is not None else m["proName"]
     pos_idx = m["proPos"] if m is not None else r["proPos"]
-    posicao = POSICOES[int(pos_idx)] if pos_idx is not None and str(pos_idx).isdigit() else ""
+    posicao = POSICOES[int(float(pos_idx))] if pd.notna(pos_idx) and str(pos_idx).strip() not in ("", "None") else ""
     foto = ui.photo(tag)
 
     g = None
@@ -86,7 +87,7 @@ def detalhe(tag: str):
         }
     overall = int(m["proOverall"]) if m is not None else (round(sum(g.values()) / 6) if g else "—")
 
-    st.html('<a href="jogadores" target="_self" style="color:var(--muted);font-weight:600">← Elenco</a>')
+    ui.back("Elenco")
 
     attrs = "".join(f"<div><b>{v}</b><span>{k}</span></div>" for k, v in (g or {}).items())
     img = f'<img class="photo" src="{foto}">' if foto else f'<img class="photo ph-empty" src="{ui.DEFAULT_PHOTO}">'
@@ -103,13 +104,16 @@ def detalhe(tag: str):
                     ("Craque do jogo", m["manOfTheMatch"]), ("Vitórias", f"{m['winRate']:.0f}%"),
                     ("Precisão de passe", f"{m['passSuccessRate']:.0f}%"), ("Precisão de chute", f"{m['shotSuccessRate']:.0f}%"),
                     ("Cartões vermelhos", m["redCards"])]
-        extra = '<div class="cdr-grid g4" style="margin-top:14px">' + "".join(
+        extra = '<div class="cdr-grid carreira" style="margin-top:14px">' + "".join(
             f'<div class="card"><div class="big" style="font-size:1.9rem">{v if isinstance(v, str) else int(v)}</div><div class="lbl">{l}</div></div>'
             for l, v in carreira) + "</div>"
     else:
         extra = '<p class="note" style="margin-top:14px">🤖 Personagem fictício do clube: tem atributos, mas não entra nas estatísticas da EA.</p>'
 
-    numero = f" · camisa {r['number']}" if r is not None and r["number"] else ""
+    camisa = f'<span class="shirt" title="Camisa">{r["number"]}</span>' if r is not None and r["number"] else ""
+    selos = (f'<div class="tags">{camisa}<span class="tagchip">🎮 {tag}</span>'
+             + (f'<span class="tagchip">{posicao}</span>' if posicao else "")
+             + ('<span class="tagchip fake">Personagem</span>' if m is None else "") + "</div>")
     st.html(f"""
 <div class="profile" style="margin-top:14px">
   <div class="fut">
@@ -119,8 +123,8 @@ def detalhe(tag: str):
     <div class="at">{attrs}</div>
   </div>
   <div style="flex:1;min-width:0;width:100%">
-    <p class="cdr-title">{nome}</p><p class="cdr-sub">{tag}{numero}</p>
-    <div class="cdr-grid g3">{fatos_html}</div>
+    <p class="cdr-title">{nome}</p>{selos}
+    <div class="cdr-grid fatos" style="--n:{len(fatos)}">{fatos_html}</div>
     {extra}
   </div>
 </div>""")

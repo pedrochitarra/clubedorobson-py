@@ -1,4 +1,5 @@
 """Visual compartilhado: CSS (mesmo tema da versão Vue) e helpers de HTML/imagens."""
+import json
 from pathlib import Path
 
 import streamlit as st
@@ -23,7 +24,7 @@ body, .stApp, .stMarkdown, .stHtml, button p { font-family: 'Inter', system-ui, 
 h1, h2, h3 { font-family: var(--display) !important; text-transform: uppercase; letter-spacing: .03em; }
 a, a:visited { color: inherit; text-decoration: none; }
 
-.cdr-title { font-family: var(--display); font-weight: 700; font-size: 2.2rem; text-transform: uppercase; margin: 0; line-height: 1.1; }
+.cdr-title { font-family: var(--display) !important; font-weight: 700; font-size: 2.2rem !important; text-transform: uppercase; margin: 0; line-height: 1.1; }
 .cdr-sub { color: var(--muted); margin: 2px 0 18px; }
 .cdr-section { font-family: var(--display); font-weight: 700; font-size: 1.5rem; text-transform: uppercase; margin: 28px 0 12px; }
 .cdr-grid { display: grid; gap: 14px; }
@@ -116,6 +117,17 @@ a.card:hover { transform: translateY(-2px); border-color: rgba(167,123,240,.5); 
 .attr span { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .attr b { font-family: var(--display); font-size: 1.05rem; text-align: right; }
 .attr .bar { height: 6px; }
+.cdr-grid.fatos { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+.cdr-grid.carreira { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cdr-grid.fatos .card, .cdr-grid.carreira .card { padding: 14px 16px; min-width: 0; }
+@media (max-width: 700px) { .cdr-grid.carreira { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 8px 0 18px; }
+.shirt { display: inline-grid; place-items: center; min-width: 52px; height: 52px; padding: 0 8px; border-radius: 12px 12px 18px 18px;
+         background: linear-gradient(180deg, #ff4fa0, #d81b72); color: #fff; font-family: var(--display); font-weight: 800; font-size: 1.7rem;
+         box-shadow: inset 0 -4px 0 rgba(0,0,0,.18); }
+.tagchip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 99px; background: var(--surface-3);
+           border: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: .85rem; }
+.tagchip.fake { color: var(--gold); border-color: rgba(245,197,24,.35); }
 .note { color: var(--muted); border: 1px dashed var(--border); border-radius: 12px; padding: 12px 14px; }
 @media (max-width: 700px) {
   .hero, .profile { flex-direction: column; text-align: center; }
@@ -127,19 +139,65 @@ a.card:hover { transform: translateY(-2px); border-color: rgba(167,123,240,.5); 
 
 
 def inject_css() -> None:
-    st.html(CSS)
+    st.html(CSS + LINK_CSS)
+
+
+# Cards clicáveis sem <a href>: no stlite (Python no navegador) recarregar a página
+# reinicia o Python inteiro. Um botão transparente por cima do card só reexecuta o script.
+LINK_CSS = """
+<style>
+div[class*="st-key-lnk_"] { position: relative; gap: 0 !important; }
+div[class*="st-key-lnk_"] div[data-testid="stElementContainer"]:has(.stButton) {
+  position: absolute !important; inset: 0; z-index: 3; margin: 0 !important; width: 100% !important; }
+div[class*="st-key-lnk_"] .stButton, div[class*="st-key-lnk_"] .stButton button { width: 100%; height: 100%; }
+div[class*="st-key-lnk_"] .stButton button { opacity: 0; cursor: pointer; }
+div[class*="st-key-lnk_"]:hover .card { transform: translateY(-2px); border-color: rgba(167,123,240,.5); }
+div[class*="st-key-lnk_"]:hover .match { transform: translateX(3px); }
+div[class*="st-key-lnk_"] .card { transition: transform .15s, border-color .15s; }
+div.st-key-voltar button { background: none !important; border: 0 !important; color: var(--muted) !important;
+  padding: 0 !important; min-height: 0 !important; font-weight: 600; }
+div.st-key-voltar button:hover { color: var(--text) !important; }
+</style>
+"""
+
+
+def link(key: str, html: str, page: str | None = None, **params) -> None:
+    """Desenha `html` e torna o bloco inteiro clicável: abre `page` (ou a página atual) com `params` na URL."""
+    with st.container(key=f"lnk_{key}"):
+        st.html(html)
+        if st.button("Abrir", key=f"btn_{key}"):
+            if page:
+                st.switch_page(page, query_params=params)
+            st.query_params.from_dict(params)
+            st.rerun()
+
+
+def back(label: str) -> None:
+    """Botão "voltar" com cara de link: limpa os parâmetros da URL e volta para a lista."""
+    if st.button(f"← {label}", key="voltar"):
+        st.query_params.clear()
+        st.rerun()
+
+
+@st.cache_data
+def _static_files() -> frozenset:
+    """Arquivos em static/ ("crests/123.png"...). No stlite a pasta não está no sistema de
+    arquivos do Python (o GitHub Pages serve as imagens), então vale o índice gerado no build."""
+    indice = STATIC.parent / "static_index.json"
+    if indice.exists():
+        return frozenset(json.loads(indice.read_text(encoding="utf-8")))
+    return frozenset(p.relative_to(STATIC).as_posix() for p in STATIC.rglob("*") if p.is_file())
 
 
 def crest(club_row) -> str:
     """URL do escudo local. Clube customizado usa customcrestid; licenciado usa teamId."""
     cid = club_row["customcrestid"] if club_row["iscustomteam"] == 1 else club_row["teamId"]
-    path = STATIC / "crests" / f"{cid}.png"
-    return f"app/static/crests/{cid}.png" if path.exists() else "app/static/crests/99150901.png"
+    return f"app/static/crests/{cid}.png" if f"crests/{cid}.png" in _static_files() else "app/static/crests/99150901.png"
 
 
 def photo(gamertag: str):
     """URL da foto local do jogador, ou None quando não existe."""
-    return f"app/static/players/{gamertag}.png" if (STATIC / "players" / f"{gamertag}.png").exists() else None
+    return f"app/static/players/{gamertag}.png" if f"players/{gamertag}.png" in _static_files() else None
 
 
 DEFAULT_PHOTO = "app/static/players/_default.png"

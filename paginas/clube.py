@@ -67,15 +67,15 @@ st.html(f'<div class="cdr-section">Sala de troféus <span class="gold">{s["title
 # Forma recente: últimas 10 partidas registradas
 ultimas = data.matches().head(10)
 clubs = data.clubs()
-linhas = []
-for _, m in ultimas.iterrows():
+st.html('<div class="cdr-section">Últimos jogos</div>')
+for col, (_, m) in zip(st.columns(5) + st.columns(5), ultimas.iterrows()):
     adv = m["awayClub"] if m["homeClub"] == data.CLUB_ID else m["homeClub"]
     ac = clubs.loc[adv]
-    linhas.append(
-        f'<a class="card" href="partidas?partida={m["matchId"]}" target="_self" '
-        f'style="text-align:center;padding:12px" title="{ac["name"]}">'
-        f'<img src="{ui.crest(ac)}" style="width:48px;height:48px;object-fit:contain">'
-        f'<div style="font-family:var(--display);font-weight:800;font-size:1.3rem">{m["homeGoals"]:.0f}–{m["awayGoals"]:.0f}</div>'
-        f'<span class="badge {m["result"]}">{ui.RESULT_LABEL[m["result"]]}</span></a>')
-st.html('<div class="cdr-section">Últimos jogos</div>'
-        f'<div class="cdr-grid" style="grid-template-columns:repeat(auto-fit,minmax(90px,1fr))">{"".join(linhas)}</div>')
+    with col:
+        ui.link(
+            f"ult_{m['matchId']}",
+            f'<div class="card" style="text-align:center;padding:12px" title="{ac["name"]}">'
+            f'<img src="{ui.crest(ac)}" style="width:48px;height:48px;object-fit:contain">'
+            f'<div style="font-family:var(--display);font-weight:800;font-size:1.3rem">{m["homeGoals"]:.0f}–{m["awayGoals"]:.0f}</div>'
+            f'<span class="badge {m["result"]}">{ui.RESULT_LABEL[m["result"]]}</span></div>',
+            page="paginas/partidas.py", partida=m["matchId"])

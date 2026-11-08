@@ -9,6 +9,12 @@ streamlit run app.py                                        # painel em http://l
 python get_team.py --term rage --platform ps5 --delay 0.2   # scanner de clubes na API da EA
 ```
 
+## Hospedagem
+GitHub Pages em https://pedrochitarra.github.io/clubedorobson-py/, sempre no ar: o **stlite** roda o Streamlit no navegador (Pyodide), então o site é estático. A cada push na `main`, `.github/workflows/pages.yml` roda `scripts/build_pages.py` (monta `_site/` com o `index.html` do stlite, o código, o banco e `static/` em `app/static/`) e publica. Testar local: `python scripts/build_pages.py` e servir `_site/` num subcaminho `/clubedorobson-py/`.
+- Novo arquivo Python usado pelo app precisa entrar em `ARQUIVOS` no `build_pages.py`.
+- Nada de `<a href>` para navegar dentro do app: no stlite recarregar reinicia o Python. Use `ui.link(key, html, page=None, **params)` (card clicável com botão transparente) e `ui.back(label)`.
+- Imagens de `static/` são servidas pelo Pages; o `ui.py` decide se existem pelo `static_index.json` gerado no build.
+
 ## Estrutura
 - `app.py`: entrada. `st.navigation` (barra no topo) com as páginas Clube (`/clube`, padrão), Jogadores (`/jogadores`) e Partidas (`/partidas`).
 - `paginas/`: uma página por arquivo. Detalhes por query param: `jogadores?jogador=<gamertag>` (carta FIFA, atributos, carreira; personagens fictícios incluídos) e `partidas?partida=<matchId>` (placar, estatísticas, escalações).

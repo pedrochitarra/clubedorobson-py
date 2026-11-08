@@ -28,19 +28,17 @@ def lista():
   <div class="card" style="text-align:center"><div class="big l">{r.get('l', 0)}</div><div class="lbl">Derrotas</div></div>
 </div>""")
 
-    linhas = []
     for _, m in jogos.iterrows():
         h, a = clubs.loc[m["homeClub"]], clubs.loc[m["awayClub"]]
         d = m["date"]
-        linhas.append(f"""
-<a class="card match {m['result']}" href="partidas?partida={m['matchId']}" target="_self">
+        ui.link(f"par_{m['matchId']}", f"""
+<div class="card match {m['result']}">
   <div class="dt">{d.day:02d} {MESES[d.month - 1]}<small>{d:%H:%M}</small></div>
   <div class="team home {'us' if h['clubId'] == data.CLUB_ID else ''}"><span>{h['name']}</span><img src="{ui.crest(h)}"></div>
   <div class="score">{m['homeGoals']:.0f} – {m['awayGoals']:.0f}</div>
   <div class="team {'us' if a['clubId'] == data.CLUB_ID else ''}"><img src="{ui.crest(a)}"><span>{a['name']}</span></div>
   <span class="badge {m['result']}">{ui.RESULT_LABEL[m['result']]}</span>
-</a>""")
-    st.html("".join(linhas))
+</div>""", partida=m["matchId"])
 
 
 def detalhe(match_id: str):
@@ -56,8 +54,8 @@ def detalhe(match_id: str):
     publico = f" · 👥 {ui.fmt_int(cap * random.Random(match_id).uniform(.8, 1))}" if cap else ""
     d = m["date"]
 
+    ui.back("Partidas")
     st.html(f"""
-<a href="partidas" target="_self" style="color:var(--muted);font-weight:600">← Partidas</a>
 <div class="card" style="margin-top:12px;padding:24px;background:radial-gradient(500px 220px at 50% 0%, rgba(167,123,240,.28), transparent 70%), linear-gradient(180deg,var(--surface-2),var(--surface))">
   <div class="meta">📅 {d.day:02d} {MESES[d.month - 1]} {d.year} · 🕐 {d:%H:%M} · 🏟️ {h['stadname']}{publico}</div>
   <div class="board">

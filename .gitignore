@@ -131,3 +131,7 @@ dmypy.json
 # Estado local do scanner (get_team.py)
 teams/
 last_id.txt
+
+# Gerados por scripts/build_pages.py
+_site/
+static_index.json
