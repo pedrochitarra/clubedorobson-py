@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Clube do Robson em Python: painel Streamlit de um clube de Pro Clubs (FIFA 21, PS4, clubId `6703918`), lendo o SQLite `data/raw/clubedorobson.db` (backup de 24/02/2021, mesmos dados da versão Node/Vue com tabelas em inglês). Também tem um scanner da API da EA.
+Clube do Robson em Python: painel Streamlit de um clube de Pro Clubs (FIFA 21, PS4, clubId `6703918`), lendo o SQLite `data/raw/clubedorobson.db` (backup de 24/02/2021). **Este é o banco único do Clube do Robson**: a versão Node/Vue gera o dela a partir dele (`clube-do-robson/scripts/build_sqlite.py`), então correções de dados são feitas aqui. Também tem um scanner da API da EA.
 
 ## Rodar
 ```
@@ -30,6 +30,5 @@ python get_team.py --term rage --platform ps5 --delay 0.2   # scanner de clubes 
 `C:\Users\pedro\projects\clube-do-robson`: versão Node/Express + Vue (mesmo visual). Fonte das imagens em `front-end/public/` e do gerador de SQLite `scripts/dump_to_sqlite.py`.
 
 ## Backlog
-- O `proName` do `El_Wandershow` aqui é "Show"; no banco do Vue é "Sins".
 - Guilherme, Keno, Jaramillo e B. Lolo não têm foto nem cadastro em Robsoners.
 - Endpoints da EA do `get_team.py` e do `scrapper.py` são de FIFA 21/FC 24; podem ter mudado.
